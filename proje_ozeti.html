@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8" />
+<title>CV Maker Pro — Proje Derin Özeti</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f8fafc; color: #1a202c; font-size: 13px; line-height: 1.6; }
+  .page { max-width: 900px; margin: 0 auto; padding: 40px 48px; background: #fff; }
+  h1 { font-size: 24px; font-weight: 800; color: #003399; margin-bottom: 6px; }
+  .subtitle { font-size: 13px; color: #64748b; margin-bottom: 28px; border-bottom: 3px solid #003399; padding-bottom: 12px; }
+  h2 { font-size: 15px; font-weight: 800; color: #003399; border-bottom: 2px solid #003399; padding: 5px 0 4px; margin: 24px 0 12px; text-transform: uppercase; letter-spacing: 0.8px; }
+  h3 { font-size: 13px; font-weight: 700; color: #1e40af; margin: 14px 0 6px; }
+  p { margin-bottom: 8px; color: #374151; }
+  table { width: 100%; border-collapse: collapse; margin: 10px 0 14px; font-size: 12px; }
+  th { background: #003399; color: #fff; padding: 6px 10px; text-align: left; font-weight: 700; }
+  td { padding: 5px 10px; border: 1px solid #e2e8f0; }
+  tr:nth-child(even) td { background: #f0f4f8; }
+  pre { background: #1e293b; color: #e2e8f0; border-radius: 8px; padding: 12px 16px; font-size: 11px; overflow-x: auto; margin: 8px 0 14px; font-family: 'Consolas', 'Courier New', monospace; line-height: 1.5; }
+  code { background: #e8edf8; color: #003399; padding: 1px 5px; border-radius: 3px; font-size: 11px; font-family: 'Consolas', monospace; }
+  ul, ol { padding-left: 22px; margin-bottom: 10px; }
+  li { margin-bottom: 4px; color: #374151; }
+  .badge { display: inline-block; background: #e8edf8; color: #003399; border-radius: 3px; padding: 1px 7px; font-size: 11px; font-weight: 700; margin: 1px; }
+  .warn { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 8px 12px; border-radius: 4px; margin: 10px 0; font-size: 12px; color: #92400e; }
+  .info { background: #e8edf8; border-left: 4px solid #003399; padding: 8px 12px; border-radius: 4px; margin: 10px 0; font-size: 12px; color: #1e3a5f; }
+  @media print {
+    body { background: #fff; }
+    .page { padding: 20px 24px; }
+    pre { font-size: 10px; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <h1>CV Maker Pro</h1>
+  <div class="subtitle">Proje Derin Teknik Özeti &nbsp;·&nbsp; 27 Nisan 2026</div>
+
+  <!-- GENEL YAPI -->
+  <h2>1. Genel Yapı</h2>
+  <p>Tamamen statik, backend'siz, 3 dosyadan oluşan bir web uygulaması. Node.js, sunucu veya veritabanı gerektirmez — tarayıcıda açmak yeterlidir.</p>
+  <table>
+    <tr><th>Dosya</th><th>Satır</th><th>Görev</th></tr>
+    <tr><td><code>index.html</code></td><td>438</td><td>UI iskelet, form alanları, navigasyon</td></tr>
+    <tr><td><code>app.js</code></td><td>1226</td><td>Tüm mantık: state, CRUD, önizleme, PDF</td></tr>
+    <tr><td><code>styles.css</code></td><td>366</td><td>Temalar, layout, CV görünümü</td></tr>
+  </table>
+  <p><strong>Dış bağımlılıklar:</strong></p>
+  <ul>
+    <li><code>html2pdf.js v0.10.1</code> — CDN, PDF export için (html2canvas + jsPDF bundle)</li>
+    <li><code>Font Awesome 6.5.0</code> — CDN, ikonlar</li>
+  </ul>
+
+  <!-- MİMARİ & STATE -->
+  <h2>2. Mimari &amp; State Yönetimi</h2>
+  <p>Herhangi bir framework kullanılmamış; vanilla JS ile reaktif önizleme sağlanmaktadır. Her input değişikliğinde <code>updatePreview()</code> → <code>buildCVHTML()</code> → DOM güncellenir.</p>
+  <h3>Global değişkenler</h3>
+  <pre>let currentTheme = 'classic'   // seçili tema adı
+let currentCVId = null          // localStorage'daki CV anahtarı
+let photoDataUrl = null         // base64 fotoğraf string
+const STORAGE_KEY = 'cvmaker_cvs'</pre>
+  <h3>Veri akışı</h3>
+  <p>Form → <code>collectData()</code> → JSON objesi → <code>buildCVHTML()</code> → HTML string → <code>cvPreview.innerHTML</code></p>
+  <p>Kayıt: <code>collectData()</code> → JSON objesi → <code>localStorage.setItem()</code></p>
+  <p>Yükleme: <code>localStorage.getItem()</code> → JSON parse → <code>restoreList()</code> / <code>restoreSkills()</code> → DOM'a yazılır</p>
+
+  <!-- CV VERİ MODELİ -->
+  <h2>3. CV Veri Modeli</h2>
+  <p><code>collectData()</code> fonksiyonu şu yapıyı üretir:</p>
+  <pre>{
+  theme, title, photo (base64|null), showPhoto,
+  personal: {
+    firstName, lastName, jobTitle, email, phone,
+    city, country, birthDate, maritalStatus,
+    drivingLicense, linkedin, website, github,
+    address, nationality, gender
+  },
+  summary:      { text, objective },
+  experience:   [{ title, company, start, end, location, emptype, desc }],
+  education:    [{ school, field, degree, start, end, gpa, desc }],
+  skills:       { technical:[{name,level}], software:[{name,level}], soft:[{name,level}] },
+  languages:    [{ name, level }],     // level: "1"–"6" → A1–C2
+  certifications:[{ name, issuer, date, validity, url }],
+  projects:     [{ name, role, date, tech, desc, url }],
+  volunteer:    [{ org, role, start, end, desc }],
+  awards:       [{ name, issuer, date, desc }],
+  publications: [{ title, publisher, date, url }],
+  references:   { display: 'full'|'request'|'none', items:[...] },
+  hobbies:      [string]
+}</pre>
+
+  <!-- SAYFA SİSTEMİ -->
+  <h2>4. Sayfa &amp; Navigasyon Sistemi</h2>
+  <p>3 sayfa, CSS <code>display:none/block</code> ile geçiş yapılır. Herhangi bir router kullanılmamıştır.</p>
+  <table>
+    <tr><th>Sayfa ID</th><th>İçerik</th><th>Açılış fonksiyonu</th></tr>
+    <tr><td><code>page-home</code></td><td>Hero + özellik kartları</td><td>Varsayılan (ilk açılış)</td></tr>
+    <tr><td><code>page-my-cvs</code></td><td>Kayıtlı CV kart listesi</td><td><code>showPage('my-cvs')</code></td></tr>
+    <tr><td><code>page-editor</code></td><td>Form sol + Canlı önizleme sağ</td><td><code>showPage('editor')</code></td></tr>
+  </table>
+
+  <!-- TEMALAR -->
+  <h2>5. Tema Sistemi (6 Tema)</h2>
+  <table>
+    <tr><th>Tema</th><th>Renk</th><th>Layout</th><th>Özel</th></tr>
+    <tr><td><strong>classic</strong></td><td>#2563eb (Mavi)</td><td>2 kolon, sidebar 240px</td><td>CSS gradient arka plan</td></tr>
+    <tr><td><strong>modern</strong></td><td>#7c3aed (Mor)</td><td>Geniş tek kolon</td><td>Sidebar yatay</td></tr>
+    <tr><td><strong>creative</strong></td><td>#db2777 (Pembe)</td><td>2 kolon, sidebar 220px</td><td>clip-path header</td></tr>
+    <tr><td><strong>minimal</strong></td><td>#374151 (Gri)</td><td>Tek kolon</td><td>Sidebar gizli</td></tr>
+    <tr><td><strong>executive</strong></td><td>#b45309 (Amber)</td><td>2 kolon, sidebar 230px</td><td>Altın çizgi header</td></tr>
+    <tr><td><strong>europass</strong></td><td>#003399 (AB Mavisi)</td><td>Tek kolon</td><td>12 sarı yıldız, CEFR tablosu</td></tr>
+  </table>
+  <div class="info"><strong>Sidebar genişleme çözümü:</strong> Sidebar <code>div</code>'i değil, <code>cv-preview</code> elementinin arka planı <code>linear-gradient(to right, renkA 240px, #fff 240px)</code> ile renklendirilir. Bu sayede içerik ne kadar uzarsa uzasın, sidebar rengi sayfanın sonuna kadar uzar.</div>
+
+  <!-- PREVIEW & PDF -->
+  <h2>6. Önizleme &amp; PDF Sistemi</h2>
+  <h3>CV Builder fonksiyonları</h3>
+  <table>
+    <tr><th>Fonksiyon</th><th>Kullanılan temalar</th></tr>
+    <tr><td><code>buildTwoColCV()</code></td><td>classic, creative, executive</td></tr>
+    <tr><td><code>buildModernCV()</code></td><td>modern</td></tr>
+    <tr><td><code>buildMinimalCV()</code></td><td>minimal</td></tr>
+    <tr><td><code>buildEuropassCV()</code></td><td>europass (+ 9 adet <code>buildEp*()</code> alt fonksiyon)</td></tr>
+  </table>
+  <h3>PDF export konfigürasyonu</h3>
+  <pre>const opt = {
+  margin: 0,
+  filename: name + '_CV.pdf',
+  image: { type: 'jpeg', quality: 0.98 },
+  html2canvas: {
+    scale: 2,           // yüksek kalite
+    useCORS: true,
+    logging: false,
+    backgroundColor: '#ffffff'
+    // windowWidth kasıtlı olarak KALDIRILDI — responsive CSS breakpoint sorunu
+  },
+  jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true },
+  pagebreak: { mode: ['css', 'legacy'] }  // çok sayfalı destek
+};</pre>
+  <p>PDF sayfalama için CSS kuralları: <code>page-break-inside: avoid</code> → <code>.cv-section</code>, <code>.cv-item</code>, <code>.ep-timeline-entry</code>, <code>.eu-lang-table</code></p>
+
+  <!-- KAYIT / YÜKLEME -->
+  <h2>7. Save / Load / Delete Sistemi</h2>
+  <h3>Kaydetme (<code>saveCV()</code>)</h3>
+  <ul>
+    <li>Zorunlu alan: <code>firstName</code> veya <code>lastName</code> veya <code>title</code></li>
+    <li>Her CV <code>cv_{timestamp}</code> ID'si alır</li>
+    <li><code>QuotaExceededError</code> yakalanırsa fotoğrafsız tekrar dener (~5MB localStorage limiti)</li>
+  </ul>
+  <h3>Yükleme (<code>loadCV()</code>)</h3>
+  <ul>
+    <li><code>resetForm()</code> ile form temizlenir</li>
+    <li><code>restoreList()</code> ile dinamik öğeler (deneyim, eğitim, dil vb.) yaratılır</li>
+    <li><code>restoreSkills()</code> ile beceri satırları restore edilir</li>
+  </ul>
+  <h3>JSON Yedekleme &amp; Geri Yükleme</h3>
+  <table>
+    <tr><th>Fonksiyon</th><th>Görev</th></tr>
+    <tr><td><code>exportAllCVs()</code></td><td>Tüm CV'leri tek JSON dosyası olarak indirir</td></tr>
+    <tr><td><code>exportSingleCV(id)</code></td><td>Tek CV'yi JSON olarak indirir (CV kartındaki ↓ butonu)</td></tr>
+    <tr><td><code>importCVs(event)</code></td><td>JSON dosyasından CV içe aktarır, mevcutlarla birleştirir</td></tr>
+    <tr><td><code>downloadJSON(obj, filename)</code></td><td>Blob → URL → anchor click → download tetikler</td></tr>
+  </table>
+
+  <!-- EUROPASS -->
+  <h2>8. Europass Şablonu Detayları</h2>
+  <ul>
+    <li>Header: AB bayrağı 12 sarı yıldız (<code>★</code>, <code>#FFCC00</code>) + "Curriculum Vitae" etiketi</li>
+    <li>İsim bloğu + fotoğraf yan yana, <code>#003399</code> kalın alt çizgi</li>
+    <li>Timeline layout: sol 108px tarih kolonu, sağ içerik</li>
+    <li>Fotoğraf kare (border-radius: 3px) — standart yuvarlak değil</li>
+    <li>Beceriler chip formatında (<code>.ep-skill-chip</code>)</li>
+  </ul>
+  <h3>CEFR Dil Tablosu</h3>
+  <p>6 sütun: <strong>Okuma, Dinleme, Etkileşim, Sunum, Yazma</strong>. Level değeri <code>1–6</code> → <code>A1–C2</code> dönüşümü:</p>
+  <table>
+    <tr><th>Stored value</th><th>CEFR</th><th>Renk</th></tr>
+    <tr><td>1</td><td>A1 – Başlangıç</td><td style="background:#fef9c3;color:#854d0e">Sarı</td></tr>
+    <tr><td>2</td><td>A2 – Temel</td><td style="background:#fef9c3;color:#854d0e">Sarı</td></tr>
+    <tr><td>3</td><td>B1 – Orta</td><td style="background:#dbeafe;color:#1e40af">Mavi</td></tr>
+    <tr><td>4</td><td>B2 – Orta Üstü</td><td style="background:#dbeafe;color:#1e40af">Mavi</td></tr>
+    <tr><td>5</td><td>C1 – İleri</td><td style="background:#dcfce7;color:#14532d">Yeşil</td></tr>
+    <tr><td>6</td><td>C2 – Anadil Düzeyi</td><td style="background:#dcfce7;color:#14532d">Yeşil</td></tr>
+  </table>
+
+  <!-- DÜZELTILEN BUGLAR -->
+  <h2>9. Çözülen Kritik Sorunlar</h2>
+  <table>
+    <tr><th>Sorun</th><th>Kök Neden</th><th>Çözüm</th></tr>
+    <tr>
+      <td>PDF'de ekstra boş sayfa</td>
+      <td><code>min-height: 1123px</code> + <code>cv-body</code> min-height toplamı 1 sayfayı aşıyordu</td>
+      <td>CSS gradient sidebar yaklaşımı; sidebar div'inin min-height kaldırıldı</td>
+    </tr>
+    <tr>
+      <td>PDF sadece sağ yarıyı gösteriyordu</td>
+      <td><code>windowWidth: 794</code> parametresi responsive CSS'i tetikliyor, preview paneli daralıyordu</td>
+      <td><code>windowWidth/windowHeight</code> parametreleri kaldırıldı</td>
+    </tr>
+    <tr>
+      <td>PDF export tamamen bozuldu</td>
+      <td><code>window.jsPDF</code> / <code>window.html2canvas</code> bundle'dan ayrı erişilemiyor</td>
+      <td><code>html2pdf().set().from().save()</code> zinciri kullanıldı</td>
+    </tr>
+    <tr>
+      <td>Kaydet butonu çalışmıyordu</td>
+      <td><code>localStorage.setItem()</code> try-catch olmadan fırlatıyordu (QuotaExceededError)</td>
+      <td>try-catch + fotoğrafsız fallback eklendi</td>
+    </tr>
+    <tr>
+      <td>Bölümler kaydediliyor ama yüklenmiyor (içerik boş)</td>
+      <td><code>querySelectorAll('[id^="type_"]')</code> hem container hem child input'ları eşleştiriyordu; <code>nodes[nodes.length-1]</code> son input'u döndürüyordu</td>
+      <td>Selector <code>.dynamic-item[id^="type_"]</code> / <code>.skill-item[id^="cat_skill_"]</code> olarak güncellendi</td>
+    </tr>
+  </table>
+
+  <!-- SINIRLAMALAR -->
+  <h2>10. Bilinen Sınırlamalar</h2>
+  <div class="warn">
+    <ul>
+      <li>Fotoğraf base64 olarak localStorage'da saklanır → büyük fotoğraflarda ~5MB limiti aşılabilir (QuotaExceededError handling mevcuttur)</li>
+      <li>PDF export masaüstü tarayıcılarda çalışır; mobilde responsive CSS sorunları yaşanabilir</li>
+      <li>Tüm veriler tarayıcı localStorage'ında tutulur — farklı cihaz/tarayıcıya geçişte JSON yedek/geri yükleme gerekir</li>
+      <li>Veri arama, filtreleme veya sıralama özelliği mevcut değildir</li>
+    </ul>
+  </div>
+
+  <div style="margin-top:32px;padding-top:14px;border-top:2px solid #003399;font-size:11px;color:#94a3b8;display:flex;justify-content:space-between;">
+    <span>CV Maker Pro — Proje Teknik Özeti</span>
+    <span>27 Nisan 2026</span>
+  </div>
+
+</div>
+</body>
+</html>

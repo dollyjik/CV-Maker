@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CV Maker Pro</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body class="theme-classic" data-page="home">
+
+<!-- ===================== NAVIGATION ===================== -->
+<nav class="navbar">
+  <div class="nav-brand">
+    <i class="fas fa-file-alt"></i>
+    <span>CV Maker Pro</span>
+  </div>
+  <div class="nav-actions">
+    <button class="btn btn-outline" id="btnMyCVs" onclick="showPage('my-cvs')">
+      <i class="fas fa-folder-open"></i> CV'lerim
+    </button>
+    <button class="btn btn-primary" id="btnNewCV" onclick="startNewCV()">
+      <i class="fas fa-plus"></i> Yeni CV
+    </button>
+  </div>
+</nav>
+
+<!-- ===================== HOME PAGE ===================== -->
+<div id="page-home" class="page active">
+  <div class="hero">
+    <div class="hero-content">
+      <h1>Profesyonel CV'nizi<br><span class="highlight">Dakikalar İçinde</span> Oluşturun</h1>
+      <p>5 farklı tema, tüm sektörlere uygun kategoriler ve anında PDF indirme ile hayalinizdeki CV'yi yaratın.</p>
+      <div class="hero-buttons">
+        <button class="btn btn-primary btn-lg" onclick="startNewCV()">
+          <i class="fas fa-rocket"></i> Hemen Başla
+        </button>
+        <button class="btn btn-outline btn-lg" onclick="showPage('my-cvs')">
+          <i class="fas fa-folder-open"></i> Kayıtlı CV'lerim
+        </button>
+      </div>
+    </div>
+    <div class="hero-image">
+      <div class="cv-preview-mini">
+        <div class="mini-header"></div>
+        <div class="mini-lines">
+          <div class="ml w80"></div><div class="ml w60"></div>
+          <div class="ml w100"></div><div class="ml w70"></div>
+          <div class="ml w90"></div><div class="ml w50"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="features">
+    <div class="feature-card">
+      <i class="fas fa-palette"></i>
+      <h3>5 Profesyonel Tema</h3>
+      <p>Classic, Modern, Creative, Minimal ve Executive temalar</p>
+    </div>
+    <div class="feature-card">
+      <i class="fas fa-list-check"></i>
+      <h3>Tam Kategoriler</h3>
+      <p>Kişisel bilgi, deneyim, eğitim, beceri ve çok daha fazlası</p>
+    </div>
+    <div class="feature-card">
+      <i class="fas fa-file-pdf"></i>
+      <h3>PDF Export</h3>
+      <p>Tek tıkla yüksek kaliteli PDF olarak indirin</p>
+    </div>
+    <div class="feature-card">
+      <i class="fas fa-save"></i>
+      <h3>Otomatik Kayıt</h3>
+      <p>CV'leriniz tarayıcınızda güvenle saklanır</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MY CVS PAGE ===================== -->
+<div id="page-my-cvs" class="page">
+  <div class="page-header">
+    <h2><i class="fas fa-folder-open"></i> Kayıtlı CV'lerim</h2>
+    <div class="page-header-actions">
+      <button class="btn btn-outline" onclick="exportAllCVs()" title="Tüm CV'leri JSON dosyası olarak indir">
+        <i class="fas fa-download"></i> Yedekle
+      </button>
+      <button class="btn btn-outline" onclick="document.getElementById('importCVsInput').click()" title="JSON yedek dosyasından CV'leri yükle">
+        <i class="fas fa-upload"></i> İçe Aktar
+      </button>
+      <input type="file" id="importCVsInput" accept="application/json,.json" hidden onchange="importCVs(event)" />
+      <button class="btn btn-primary" onclick="startNewCV()">
+        <i class="fas fa-plus"></i> Yeni CV Oluştur
+      </button>
+    </div>
+  </div>
+  <div id="cvList" class="cv-list"></div>
+</div>
+
+<!-- ===================== EDITOR PAGE ===================== -->
+<div id="page-editor" class="page">
+  <div class="editor-layout">
+
+    <!-- Left Panel: Form -->
+    <div class="editor-panel" id="editorPanel">
+      <div class="editor-top">
+        <div class="editor-meta">
+          <label class="cv-title-label"><i class="fas fa-tag"></i> Kayıt Adı <small>(sadece sizin için)</small></label>
+          <input type="text" id="cvTitle" placeholder="ör: Frontend Dev CV'si" class="cv-title-input" />
+        </div>
+        <div class="headline-meta">
+          <label class="cv-title-label highlight-label"><i class="fas fa-heading"></i> CV'de Görünen Başlık / Unvan <span class="badge-cv">CV'ye yansır</span></label>
+          <input type="text" id="jobTitleTop" placeholder="ör: Yazılım Geliştirici, Pazarlama Uzmanı..." class="cv-title-input headline-input" oninput="syncJobTitle(this.value)" />
+        </div>
+        <div class="theme-selector">
+          <span>Tema:</span>
+          <div class="theme-dots">
+            <button class="theme-dot theme-classic-dot active" title="Classic" onclick="selectTheme('classic')"></button>
+            <button class="theme-dot theme-modern-dot" title="Modern" onclick="selectTheme('modern')"></button>
+            <button class="theme-dot theme-creative-dot" title="Creative" onclick="selectTheme('creative')"></button>
+            <button class="theme-dot theme-minimal-dot" title="Minimal" onclick="selectTheme('minimal')"></button>
+            <button class="theme-dot theme-executive-dot" title="Executive" onclick="selectTheme('executive')"></button>
+            <button class="theme-dot theme-europass-dot" title="Europass (AB Standardı)" onclick="selectTheme('europass')"></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section Tabs -->
+      <div class="section-tabs">
+        <button class="sec-tab active" onclick="showSection('personal', this)"><i class="fas fa-user"></i> Kişisel</button>
+        <button class="sec-tab" onclick="showSection('summary', this)"><i class="fas fa-align-left"></i> Özet</button>
+        <button class="sec-tab" onclick="showSection('experience', this)"><i class="fas fa-briefcase"></i> Deneyim</button>
+        <button class="sec-tab" onclick="showSection('education', this)"><i class="fas fa-graduation-cap"></i> Eğitim</button>
+        <button class="sec-tab" onclick="showSection('skills', this)"><i class="fas fa-star"></i> Beceriler</button>
+        <button class="sec-tab" onclick="showSection('languages', this)"><i class="fas fa-language"></i> Diller</button>
+        <button class="sec-tab" onclick="showSection('certifications', this)"><i class="fas fa-certificate"></i> Sertifikalar</button>
+        <button class="sec-tab" onclick="showSection('projects', this)"><i class="fas fa-code"></i> Projeler</button>
+        <button class="sec-tab" onclick="showSection('volunteer', this)"><i class="fas fa-hands-helping"></i> Gönüllülük</button>
+        <button class="sec-tab" onclick="showSection('awards', this)"><i class="fas fa-trophy"></i> Ödüller</button>
+        <button class="sec-tab" onclick="showSection('publications', this)"><i class="fas fa-book"></i> Yayınlar</button>
+        <button class="sec-tab" onclick="showSection('references', this)"><i class="fas fa-user-check"></i> Referanslar</button>
+        <button class="sec-tab" onclick="showSection('hobbies', this)"><i class="fas fa-heart"></i> Hobiler</button>
+      </div>
+
+      <!-- SCROLLABLE FORM AREA -->
+      <div class="form-scroll">
+
+      <!-- PERSONAL SECTION -->
+      <div id="section-personal" class="form-section active">
+        <h3 class="section-title"><i class="fas fa-user"></i> Kişisel Bilgiler</h3>
+        <div class="photo-upload-area">
+          <div class="photo-preview" id="photoPreview" onclick="document.getElementById('photoInput').click()">
+            <i class="fas fa-camera"></i>
+            <span>Fotoğraf Ekle</span>
+          </div>
+          <input type="file" id="photoInput" accept="image/*" onchange="handlePhotoUpload(event)" hidden />
+        </div>
+        <div class="photo-toggle-row">
+          <label class="toggle-label">
+            <span><i class="fas fa-eye"></i> Fotoğrafı CV'de göster</span>
+            <div class="toggle-switch">
+              <input type="checkbox" id="showPhoto" checked onchange="updatePreview()" />
+              <span class="toggle-track"><span class="toggle-thumb"></span></span>
+            </div>
+          </label>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Ad <span class="req">*</span></label>
+            <input type="text" id="firstName" placeholder="Adınız" oninput="updatePreview()" />
+          </div>
+          <div class="form-group">
+            <label>Soyad <span class="req">*</span></label>
+            <input type="text" id="lastName" placeholder="Soyadınız" oninput="updatePreview()" />
+          </div>
+          <div class="form-group full">
+            <label>Meslek / Unvan</label>
+            <input type="text" id="jobTitle" placeholder="ör: Yazılım Geliştirici" oninput="updatePreview()" />
+          </div>
+          <div class="form-group">
+            <label>E-posta</label>
+            <input type="email" id="email" placeholder="ornek@email.com" oninput="updatePreview()" />
+          </div>
+          <div class="form-group">
+            <label>Telefon</label>
+            <input type="tel" id="phone" placeholder="+90 555 000 00 00" oninput="updatePreview()" />
+          </div>
+          <div class="form-group">
+            <label>Şehir</label>
+            <input type="text" id="city" placeholder="İstanbul" oninput="updatePreview()" />
+          </div>
+          <div class="form-group">
+            <label>Ülke</label>
+            <input type="text" id="country" placeholder="Türkiye" oninput="updatePreview()" />
+          </div>
+          <div class="form-group">
+            <label>Doğum Tarihi</label>
+            <input type="date" id="birthDate" oninput="updatePreview()" />
+          </div>
+          <div class="form-group">
+            <label>Medeni Durum</label>
+            <select id="maritalStatus" onchange="updatePreview()">
+              <option value="">Seçiniz</option>
+              <option value="Bekar">Bekar</option>
+              <option value="Evli">Evli</option>
+              <option value="Boşanmış">Boşanmış</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Ehliyet</label>
+            <select id="drivingLicense" onchange="updatePreview()">
+              <option value="">Yok</option>
+              <option value="A">A</option>
+              <option value="B">B</option>
+              <option value="C">C</option>
+              <option value="D">D</option>
+              <option value="B, C">B, C</option>
+            </select>
+          </div>
+          <div class="form-group full">
+            <label>LinkedIn</label>
+            <input type="url" id="linkedin" placeholder="linkedin.com/in/adsoyadı" oninput="updatePreview()" />
+          </div>
+          <div class="form-group full">
+            <label>Web Sitesi / Portfolio</label>
+            <input type="url" id="website" placeholder="www.portfolyom.com" oninput="updatePreview()" />
+          </div>
+          <div class="form-group full">
+            <label>GitHub</label>
+            <input type="url" id="github" placeholder="github.com/kullaniciadi" oninput="updatePreview()" />
+          </div>
+          <div class="form-group full">
+            <label>Adres</label>
+            <textarea id="address" placeholder="Açık adresiniz (isteğe bağlı)" rows="2" oninput="updatePreview()"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Milliyet</label>
+            <input type="text" id="nationality" placeholder="T.C." oninput="updatePreview()" />
+          </div>
+          <div class="form-group">
+            <label>Cinsiyet</label>
+            <select id="gender" onchange="updatePreview()">
+              <option value="">Seçiniz</option>
+              <option value="Erkek">Erkek</option>
+              <option value="Kadın">Kadın</option>
+              <option value="Belirtmek istemiyorum">Belirtmek istemiyorum</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUMMARY SECTION -->
+      <div id="section-summary" class="form-section">
+        <h3 class="section-title"><i class="fas fa-align-left"></i> Profesyonel Özet</h3>
+        <div class="form-group full">
+          <label>Kişisel / Profesyonel Özet</label>
+          <textarea id="summary" rows="6" placeholder="Kendinizi kısaca tanıtın. Güçlü yönlerinizi, kariyer hedeflerinizi ve öne çıkan özelliklerinizi yazın..." oninput="updatePreview()"></textarea>
+          <div class="char-count"><span id="summaryCount">0</span> karakter</div>
+        </div>
+        <div class="form-group full">
+          <label>Amaç / Hedef (isteğe bağlı)</label>
+          <textarea id="objective" rows="3" placeholder="Kariyer hedefinizi belirtin..." oninput="updatePreview()"></textarea>
+        </div>
+      </div>
+
+      <!-- EXPERIENCE SECTION -->
+      <div id="section-experience" class="form-section">
+        <h3 class="section-title"><i class="fas fa-briefcase"></i> İş Deneyimi</h3>
+        <div id="experienceList"></div>
+        <button class="btn btn-add" onclick="addItem('experience')">
+          <i class="fas fa-plus"></i> Deneyim Ekle
+        </button>
+      </div>
+
+      <!-- EDUCATION SECTION -->
+      <div id="section-education" class="form-section">
+        <h3 class="section-title"><i class="fas fa-graduation-cap"></i> Eğitim</h3>
+        <div id="educationList"></div>
+        <button class="btn btn-add" onclick="addItem('education')">
+          <i class="fas fa-plus"></i> Eğitim Ekle
+        </button>
+      </div>
+
+      <!-- SKILLS SECTION -->
+      <div id="section-skills" class="form-section">
+        <h3 class="section-title"><i class="fas fa-star"></i> Beceriler</h3>
+        <div class="skill-categories">
+          <div class="skill-cat">
+            <h4>Teknik Beceriler</h4>
+            <div id="technicalSkillList"></div>
+            <button class="btn btn-add sm" onclick="addSkill('technical')"><i class="fas fa-plus"></i> Ekle</button>
+          </div>
+          <div class="skill-cat">
+            <h4>Yazılım / Araçlar</h4>
+            <div id="softwareSkillList"></div>
+            <button class="btn btn-add sm" onclick="addSkill('software')"><i class="fas fa-plus"></i> Ekle</button>
+          </div>
+          <div class="skill-cat">
+            <h4>Kişisel Beceriler (Soft Skills)</h4>
+            <div id="softSkillList"></div>
+            <button class="btn btn-add sm" onclick="addSkill('soft')"><i class="fas fa-plus"></i> Ekle</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- LANGUAGES SECTION -->
+      <div id="section-languages" class="form-section">
+        <h3 class="section-title"><i class="fas fa-language"></i> Yabancı Diller</h3>
+        <div id="languageList"></div>
+        <button class="btn btn-add" onclick="addItem('language')">
+          <i class="fas fa-plus"></i> Dil Ekle
+        </button>
+      </div>
+
+      <!-- CERTIFICATIONS SECTION -->
+      <div id="section-certifications" class="form-section">
+        <h3 class="section-title"><i class="fas fa-certificate"></i> Sertifikalar & Kurslar</h3>
+        <div id="certificationList"></div>
+        <button class="btn btn-add" onclick="addItem('certification')">
+          <i class="fas fa-plus"></i> Sertifika Ekle
+        </button>
+      </div>
+
+      <!-- PROJECTS SECTION -->
+      <div id="section-projects" class="form-section">
+        <h3 class="section-title"><i class="fas fa-code"></i> Projeler</h3>
+        <div id="projectList"></div>
+        <button class="btn btn-add" onclick="addItem('project')">
+          <i class="fas fa-plus"></i> Proje Ekle
+        </button>
+      </div>
+
+      <!-- VOLUNTEER SECTION -->
+      <div id="section-volunteer" class="form-section">
+        <h3 class="section-title"><i class="fas fa-hands-helping"></i> Gönüllü Çalışmalar</h3>
+        <div id="volunteerList"></div>
+        <button class="btn btn-add" onclick="addItem('volunteer')">
+          <i class="fas fa-plus"></i> Gönüllülük Ekle
+        </button>
+      </div>
+
+      <!-- AWARDS SECTION -->
+      <div id="section-awards" class="form-section">
+        <h3 class="section-title"><i class="fas fa-trophy"></i> Ödüller & Başarılar</h3>
+        <div id="awardList"></div>
+        <button class="btn btn-add" onclick="addItem('award')">
+          <i class="fas fa-plus"></i> Ödül Ekle
+        </button>
+      </div>
+
+      <!-- PUBLICATIONS SECTION -->
+      <div id="section-publications" class="form-section">
+        <h3 class="section-title"><i class="fas fa-book"></i> Yayınlar & Makaleler</h3>
+        <div id="publicationList"></div>
+        <button class="btn btn-add" onclick="addItem('publication')">
+          <i class="fas fa-plus"></i> Yayın Ekle
+        </button>
+      </div>
+
+      <!-- REFERENCES SECTION -->
+      <div id="section-references" class="form-section">
+        <h3 class="section-title"><i class="fas fa-user-check"></i> Referanslar</h3>
+        <div class="form-group">
+          <label>Referans Gösterimi</label>
+          <select id="referenceDisplay" onchange="updatePreview()">
+            <option value="full">Tam bilgi göster</option>
+            <option value="request">İstek üzerine verilebilir</option>
+            <option value="none">Gösterme</option>
+          </select>
+        </div>
+        <div id="referenceList"></div>
+        <button class="btn btn-add" onclick="addItem('reference')">
+          <i class="fas fa-plus"></i> Referans Ekle
+        </button>
+      </div>
+
+      <!-- HOBBIES SECTION -->
+      <div id="section-hobbies" class="form-section">
+        <h3 class="section-title"><i class="fas fa-heart"></i> Hobiler & İlgi Alanları</h3>
+        <div id="hobbyList" class="hobby-list"></div>
+        <div class="hobby-input-row">
+          <input type="text" id="hobbyInput" placeholder="Hobi ekle (ör: Fotoğrafçılık)" onkeydown="if(event.key==='Enter')addHobby()" />
+          <button class="btn btn-add" onclick="addHobby()"><i class="fas fa-plus"></i></button>
+        </div>
+        <div class="hobby-suggestions">
+          <span>Öneriler:</span>
+          <button onclick="addHobbyText('Seyahat')">Seyahat</button>
+          <button onclick="addHobbyText('Fotoğrafçılık')">Fotoğrafçılık</button>
+          <button onclick="addHobbyText('Müzik')">Müzik</button>
+          <button onclick="addHobbyText('Spor')">Spor</button>
+          <button onclick="addHobbyText('Okuma')">Okuma</button>
+          <button onclick="addHobbyText('Yemek')">Yemek</button>
+          <button onclick="addHobbyText('Sinema')">Sinema</button>
+          <button onclick="addHobbyText('Doğa')">Doğa</button>
+        </div>
+      </div>
+
+      <!-- Editor Bottom Actions -->
+      <div class="editor-actions">
+        <button class="btn btn-secondary" onclick="saveCV()">
+          <i class="fas fa-save"></i> Kaydet
+        </button>
+        <button class="btn btn-danger-outline" onclick="exportPDF()">
+          <i class="fas fa-file-pdf"></i> PDF İndir
+        </button>
+      </div>
+
+      </div><!-- /form-scroll -->
+    </div>
+
+    <!-- Right Panel: Live Preview -->
+    <div class="preview-panel" id="previewPanel">
+      <div class="preview-toolbar">
+        <div class="preview-toolbar-left">
+          <i class="fas fa-eye"></i> Canlı Önizleme
+        </div>
+        <div class="preview-toolbar-right">
+          <button class="btn btn-sm btn-danger" onclick="exportPDF()">
+            <i class="fas fa-file-pdf"></i> PDF İndir
+          </button>
+        </div>
+      </div>
+      <div class="preview-scroll">
+        <div id="cvPreview" class="cv-preview">
+          <!-- Generated dynamically -->
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===================== TOAST ===================== -->
+<div id="toast" class="toast"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
