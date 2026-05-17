@@ -11,7 +11,6 @@
 </head>
 <body class="theme-classic" data-page="home">
 
-<!-- ===================== NAVIGATION ===================== -->
 <nav class="navbar">
   <div class="nav-brand">
     <i class="fas fa-file-alt"></i>
@@ -24,10 +23,12 @@
     <button class="btn btn-primary" id="btnNewCV" onclick="startNewCV()">
       <i class="fas fa-plus"></i> Yeni CV
     </button>
+    <button class="btn btn-icon-only" id="darkModeToggle" onclick="toggleDarkMode()" title="Karanlık / Aydınlık Mod">
+      <i class="fas fa-moon" id="darkModeIcon"></i>
+    </button>
   </div>
 </nav>
 
-<!-- ===================== HOME PAGE ===================== -->
 <div id="page-home" class="page active">
   <div class="hero">
     <div class="hero-content">
@@ -77,7 +78,6 @@
   </div>
 </div>
 
-<!-- ===================== MY CVS PAGE ===================== -->
 <div id="page-my-cvs" class="page">
   <div class="page-header">
     <h2><i class="fas fa-folder-open"></i> Kayıtlı CV'lerim</h2>
@@ -97,11 +97,9 @@
   <div id="cvList" class="cv-list"></div>
 </div>
 
-<!-- ===================== EDITOR PAGE ===================== -->
 <div id="page-editor" class="page">
   <div class="editor-layout">
 
-    <!-- Left Panel: Form -->
     <div class="editor-panel" id="editorPanel">
       <div class="editor-top">
         <div class="editor-meta">
@@ -125,7 +123,6 @@
         </div>
       </div>
 
-      <!-- Section Tabs -->
       <div class="section-tabs">
         <button class="sec-tab active" onclick="showSection('personal', this)"><i class="fas fa-user"></i> Kişisel</button>
         <button class="sec-tab" onclick="showSection('summary', this)"><i class="fas fa-align-left"></i> Özet</button>
@@ -142,10 +139,8 @@
         <button class="sec-tab" onclick="showSection('hobbies', this)"><i class="fas fa-heart"></i> Hobiler</button>
       </div>
 
-      <!-- SCROLLABLE FORM AREA -->
       <div class="form-scroll">
 
-      <!-- PERSONAL SECTION -->
       <div id="section-personal" class="form-section active">
         <h3 class="section-title"><i class="fas fa-user"></i> Kişisel Bilgiler</h3>
         <div class="photo-upload-area">
@@ -249,7 +244,6 @@
         </div>
       </div>
 
-      <!-- SUMMARY SECTION -->
       <div id="section-summary" class="form-section">
         <h3 class="section-title"><i class="fas fa-align-left"></i> Profesyonel Özet</h3>
         <div class="form-group full">
@@ -263,7 +257,6 @@
         </div>
       </div>
 
-      <!-- EXPERIENCE SECTION -->
       <div id="section-experience" class="form-section">
         <h3 class="section-title"><i class="fas fa-briefcase"></i> İş Deneyimi</h3>
         <div id="experienceList"></div>
@@ -272,7 +265,6 @@
         </button>
       </div>
 
-      <!-- EDUCATION SECTION -->
       <div id="section-education" class="form-section">
         <h3 class="section-title"><i class="fas fa-graduation-cap"></i> Eğitim</h3>
         <div id="educationList"></div>
@@ -281,7 +273,6 @@
         </button>
       </div>
 
-      <!-- SKILLS SECTION -->
       <div id="section-skills" class="form-section">
         <h3 class="section-title"><i class="fas fa-star"></i> Beceriler</h3>
         <div class="skill-categories">
@@ -303,7 +294,6 @@
         </div>
       </div>
 
-      <!-- LANGUAGES SECTION -->
       <div id="section-languages" class="form-section">
         <h3 class="section-title"><i class="fas fa-language"></i> Yabancı Diller</h3>
         <div id="languageList"></div>
@@ -312,7 +302,6 @@
         </button>
       </div>
 
-      <!-- CERTIFICATIONS SECTION -->
       <div id="section-certifications" class="form-section">
         <h3 class="section-title"><i class="fas fa-certificate"></i> Sertifikalar & Kurslar</h3>
         <div id="certificationList"></div>
@@ -321,7 +310,6 @@
         </button>
       </div>
 
-      <!-- PROJECTS SECTION -->
       <div id="section-projects" class="form-section">
         <h3 class="section-title"><i class="fas fa-code"></i> Projeler</h3>
         <div id="projectList"></div>
@@ -330,7 +318,6 @@
         </button>
       </div>
 
-      <!-- VOLUNTEER SECTION -->
       <div id="section-volunteer" class="form-section">
         <h3 class="section-title"><i class="fas fa-hands-helping"></i> Gönüllü Çalışmalar</h3>
         <div id="volunteerList"></div>
@@ -339,7 +326,6 @@
         </button>
       </div>
 
-      <!-- AWARDS SECTION -->
       <div id="section-awards" class="form-section">
         <h3 class="section-title"><i class="fas fa-trophy"></i> Ödüller & Başarılar</h3>
         <div id="awardList"></div>
@@ -348,7 +334,6 @@
         </button>
       </div>
 
-      <!-- PUBLICATIONS SECTION -->
       <div id="section-publications" class="form-section">
         <h3 class="section-title"><i class="fas fa-book"></i> Yayınlar & Makaleler</h3>
         <div id="publicationList"></div>
@@ -357,7 +342,6 @@
         </button>
       </div>
 
-      <!-- REFERENCES SECTION -->
       <div id="section-references" class="form-section">
         <h3 class="section-title"><i class="fas fa-user-check"></i> Referanslar</h3>
         <div class="form-group">
@@ -374,7 +358,6 @@
         </button>
       </div>
 
-      <!-- HOBBIES SECTION -->
       <div id="section-hobbies" class="form-section">
         <h3 class="section-title"><i class="fas fa-heart"></i> Hobiler & İlgi Alanları</h3>
         <div id="hobbyList" class="hobby-list"></div>
@@ -395,7 +378,6 @@
         </div>
       </div>
 
-      <!-- Editor Bottom Actions -->
       <div class="editor-actions">
         <button class="btn btn-secondary" onclick="saveCV()">
           <i class="fas fa-save"></i> Kaydet
@@ -405,10 +387,9 @@
         </button>
       </div>
 
-      </div><!-- /form-scroll -->
+      </div>
     </div>
 
-    <!-- Right Panel: Live Preview -->
     <div class="preview-panel" id="previewPanel">
       <div class="preview-toolbar">
         <div class="preview-toolbar-left">
@@ -422,7 +403,6 @@
       </div>
       <div class="preview-scroll">
         <div id="cvPreview" class="cv-preview">
-          <!-- Generated dynamically -->
         </div>
       </div>
     </div>
@@ -430,7 +410,6 @@
   </div>
 </div>
 
-<!-- ===================== TOAST ===================== -->
 <div id="toast" class="toast"></div>
 
 <script src="app.js"></script>

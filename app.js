@@ -1,12 +1,35 @@
-/* ===================== STATE ===================== */
 let currentCV = null;
 let currentTheme = 'classic';
 let currentCVId = null;
 let photoDataUrl = null;
+let isDarkMode = false;
 
 const STORAGE_KEY = 'cvmaker_cvs';
+const DARK_MODE_KEY = 'cvmaker_dark_mode';
 
-/* ===================== PAGE NAVIGATION ===================== */
+function initDarkMode() {
+  isDarkMode = localStorage.getItem(DARK_MODE_KEY) === 'true';
+  applyDarkMode();
+}
+
+function toggleDarkMode() {
+  isDarkMode = !isDarkMode;
+  localStorage.setItem(DARK_MODE_KEY, isDarkMode);
+  applyDarkMode();
+}
+
+function applyDarkMode() {
+  if (isDarkMode) {
+    document.body.classList.add('dark-mode');
+    document.getElementById('darkModeIcon').className = 'fas fa-sun';
+    document.getElementById('darkModeToggle').title = 'Aydınlık Moda Geç';
+  } else {
+    document.body.classList.remove('dark-mode');
+    document.getElementById('darkModeIcon').className = 'fas fa-moon';
+    document.getElementById('darkModeToggle').title = 'Karanlık Moda Geç';
+  }
+}
+
 function showPage(name) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('page-' + name).classList.add('active');
@@ -23,7 +46,6 @@ function startNewCV() {
   updatePreview();
 }
 
-/* ===================== THEME ===================== */
 function selectTheme(theme) {
   currentTheme = theme;
   applyTheme(theme);
@@ -33,10 +55,9 @@ function selectTheme(theme) {
 }
 
 function applyTheme(theme) {
-  document.body.className = 'theme-' + theme;
+  document.body.className = 'theme-' + theme + (isDarkMode ? ' dark-mode' : '');
 }
 
-/* ===================== SECTION TABS ===================== */
 function showSection(name, btn) {
   document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.sec-tab').forEach(t => t.classList.remove('active'));
@@ -44,7 +65,6 @@ function showSection(name, btn) {
   if (btn) btn.classList.add('active');
 }
 
-/* ===================== PHOTO ===================== */
 function handlePhotoUpload(e) {
   const file = e.target.files[0];
   if (!file) return;
@@ -58,7 +78,6 @@ function handlePhotoUpload(e) {
   reader.readAsDataURL(file);
 }
 
-/* ===================== DYNAMIC ITEMS ===================== */
 const itemCounts = {};
 
 function addItem(type) {
@@ -169,7 +188,6 @@ function removeItem(id) {
   if (el) { el.remove(); updatePreview(); }
 }
 
-/* ===================== SKILLS ===================== */
 const skillCounts = { technical: 0, software: 0, soft: 0 };
 
 function addSkill(cat) {
@@ -192,7 +210,6 @@ function addSkill(cat) {
   container.appendChild(div);
 }
 
-/* ===================== HOBBIES ===================== */
 let hobbies = [];
 
 function addHobby() {
@@ -225,7 +242,6 @@ function removeHobby(i) {
   updatePreview();
 }
 
-/* ===================== FORM DATA COLLECTION ===================== */
 function val(id) {
   const el = document.getElementById(id);
   return el ? el.value.trim() : '';
@@ -289,14 +305,10 @@ function collectSkills(cat) {
   return skills;
 }
 
-/* ===================== LIVE PREVIEW ===================== */
 function updatePreview() {
   const data = collectData();
-
-  // Update summary char count
   const sumEl = document.getElementById('summary');
   if (sumEl) document.getElementById('summaryCount').textContent = sumEl.value.length;
-
   const preview = document.getElementById('cvPreview');
   preview.innerHTML = buildCVHTML(data);
 }
@@ -305,14 +317,12 @@ function buildCVHTML(d) {
   const p = d.personal;
   const fullName = [p.firstName, p.lastName].filter(Boolean).join(' ') || 'Adınız Soyadınız';
 
-  // Photo
   const showPhotoEl = document.getElementById('showPhoto');
   const showPhoto = showPhotoEl ? showPhotoEl.checked : true;
   const photoHTML = (d.photo && showPhoto)
     ? `<img class="cv-photo" src="${d.photo}" alt="photo" />`
     : '';
 
-  // Contact items
   const contacts = [];
   if (p.email) contacts.push(`<span><i class="fas fa-envelope"></i>${p.email}</span>`);
   if (p.phone) contacts.push(`<span><i class="fas fa-phone"></i>${p.phone}</span>`);
@@ -321,7 +331,6 @@ function buildCVHTML(d) {
   if (p.website) contacts.push(`<span><i class="fas fa-globe"></i>${p.website}</span>`);
   if (p.github) contacts.push(`<span><i class="fab fa-github"></i>${p.github}</span>`);
 
-  // Sidebar info items
   const sideInfo = [];
   if (p.email) sideInfo.push({ icon:'fa-envelope', text: p.email });
   if (p.phone) sideInfo.push({ icon:'fa-phone', text: p.phone });
@@ -342,7 +351,6 @@ function buildCVHTML(d) {
   if (theme === 'modern') return buildModernCV(d, fullName, photoHTML, contacts, sideInfoHTML);
   if (theme === 'europass') return buildEuropassCV(d, fullName, photoHTML);
 
-  // Two-column: classic, creative, executive
   return buildTwoColCV(d, fullName, photoHTML, contacts, sideInfoHTML, theme);
 }
 
@@ -419,7 +427,6 @@ function buildModernCV(d, fullName, photoHTML, contacts, sideInfoHTML) {
   return header + body;
 }
 
-/* ==================== EUROPASS CV ==================== */
 function buildEuropassCV(d, fullName, photoHTML) {
   const p = d.personal;
   const stars = Array(12).fill('★').join(' ');
@@ -708,7 +715,6 @@ function buildMinimalCV(d, fullName, photoHTML, contacts, sideInfo) {
   return header + body;
 }
 
-/* ---- Section builders ---- */
 function buildSummarySection(s) {
   if (!s.text && !s.objective) return '';
   let html = '<div class="cv-section"><div class="cv-section-title">Profesyonel Özet</div>';
@@ -864,7 +870,6 @@ function buildReferenceSection(refs) {
   return `<div class="cv-section"><div class="cv-section-title">Referanslar</div>${rows}</div>`;
 }
 
-/* ---- Helpers ---- */
 function formatMonth(m) {
   if (!m) return '';
   const [y, mo] = m.split('-');
@@ -903,7 +908,6 @@ function nl2br(str) {
   return str.replace(/\n/g, '<br>');
 }
 
-/* ===================== SAVE / LOAD / DELETE ===================== */
 function saveCV() {
   const data = collectData();
   if (!data.personal.firstName && !data.personal.lastName && !data.title) {
@@ -965,7 +969,6 @@ function loadCV(id) {
   const showPhotoEl = document.getElementById('showPhoto');
   if (showPhotoEl) showPhotoEl.checked = data.showPhoto !== false;
 
-  // Restore lists
   restoreList('experience', data.experience || [], ['title','company','start','end','location','emptype','desc']);
   restoreList('education', data.education || [], ['school','field','degree','start','end','gpa','desc']);
   restoreList('language', data.languages || [], ['name','level']);
@@ -976,12 +979,10 @@ function loadCV(id) {
   restoreList('publication', data.publications || [], ['title','publisher','date','url']);
   restoreList('reference', data.references?.items || [], ['name','title','company','email','phone','relation']);
 
-  // Restore skills
   restoreSkills('technical', data.skills?.technical || []);
   restoreSkills('software', data.skills?.software || []);
   restoreSkills('soft', data.skills?.soft || []);
 
-  // Restore hobbies
   hobbies = data.hobbies || [];
   renderHobbies();
 
@@ -1027,7 +1028,6 @@ function deleteCV(id) {
   showToast('CV silindi.', 'success');
 }
 
-/* ===================== BACKUP / RESTORE (JSON) ===================== */
 function exportAllCVs() {
   const cvs = loadAllCVs();
   if (!Object.keys(cvs).length) {
@@ -1079,7 +1079,6 @@ function importCVs(event) {
   reader.onload = (e) => {
     try {
       const parsed = JSON.parse(e.target.result);
-      // Accept either {cvs: {...}} payload or raw {id: cv} object
       const incoming = parsed && typeof parsed === 'object'
         ? (parsed.cvs && typeof parsed.cvs === 'object' ? parsed.cvs : parsed)
         : null;
@@ -1139,7 +1138,6 @@ function renderCVList() {
   }).join('');
 }
 
-/* ===================== PDF EXPORT ===================== */
 function exportPDF() {
   const data = collectData();
   const name = [data.personal.firstName, data.personal.lastName].filter(Boolean).join('_') || 'CV';
@@ -1166,7 +1164,6 @@ function exportPDF() {
   });
 }
 
-/* ===================== RESET FORM ===================== */
 function resetForm() {
   const inputs = ['cvTitle','jobTitleTop','firstName','lastName','jobTitle','email','phone','city','country',
     'birthDate','maritalStatus','drivingLicense','linkedin','website','github','address',
@@ -1188,7 +1185,6 @@ function resetForm() {
   document.getElementById('photoPreview').innerHTML = '<i class="fas fa-camera"></i><span>Fotoğraf Ekle</span>';
 }
 
-/* ===================== TOAST ===================== */
 function showToast(msg, type) {
   const t = document.getElementById('toast');
   t.textContent = msg;
@@ -1196,27 +1192,22 @@ function showToast(msg, type) {
   setTimeout(() => t.classList.remove('show'), 3000);
 }
 
-/* ===================== HEADLINE SYNC ===================== */
 function syncJobTitle(value) {
-  // top input → personal section input
   const el = document.getElementById('jobTitle');
   if (el) el.value = value;
   updatePreview();
 }
 
-// Keep top headline in sync when personal jobTitle changes
 function onJobTitleChange(value) {
   const top = document.getElementById('jobTitleTop');
   if (top) top.value = value;
   updatePreview();
 }
 
-/* ===================== INIT ===================== */
 document.addEventListener('DOMContentLoaded', () => {
-  // Wire personal jobTitle → top headline sync
+  initDarkMode();
   const jt = document.getElementById('jobTitle');
   if (jt) jt.addEventListener('input', () => onJobTitleChange(jt.value));
-
   updatePreview();
   const sum = document.getElementById('summary');
   if (sum) sum.addEventListener('input', () => {
