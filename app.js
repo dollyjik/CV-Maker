@@ -413,6 +413,7 @@ function updatePreview() {
   const sumEl = document.getElementById('summary');
   if (sumEl) document.getElementById('summaryCount').textContent = sumEl.value.length;
   const preview = document.getElementById('cvPreview');
+  preview.setAttribute('lang', data.cvLanguage === 'en' ? 'en' : 'tr');
   preview.innerHTML = buildCVHTML(data);
 }
 
