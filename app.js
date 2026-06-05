@@ -3,9 +3,97 @@ let currentTheme = 'classic';
 let currentCVId = null;
 let photoDataUrl = null;
 let isDarkMode = false;
+let currentCVLanguage = 'tr';
 
 const STORAGE_KEY = 'cvmaker_cvs';
 const DARK_MODE_KEY = 'cvmaker_dark_mode';
+
+const TRANSLATIONS = {
+  tr: {
+    months: ['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'],
+    ongoing: 'Devam ediyor',
+    contact: 'İletişim',
+    summary: 'Profesyonel Özet',
+    experience: 'İş Deneyimi',
+    education: 'Eğitim',
+    skills: 'Beceriler',
+    languages: 'Diller',
+    certifications: 'Sertifikalar',
+    projects: 'Projeler',
+    volunteer: 'Gönüllü Çalışmalar',
+    awards: 'Ödüller',
+    awardsEp: 'Ödüller &amp; Başarılar',
+    publications: 'Yayınlar',
+    references: 'Referanslar',
+    hobbies: 'Hobiler',
+    hobbiesEp: 'Hobiler &amp; İlgi Alanları',
+    position: 'Pozisyon',
+    school: 'Okul',
+    gpa: 'GPA',
+    license: 'Ehliyet',
+    refOnRequest: 'Referanslar istek üzerine sunulacaktır.',
+    epRefOnRequest: 'İstek üzerine sunulacaktır.',
+    epEducation: 'Eğitim ve Öğretim',
+    langLvls: ['','A1 Başlangıç','A2 Temel','B1 Orta','B2 Orta Üstü','C1 İleri','C2 Anadil'],
+    skillLvls: {20:'Başlangıç',40:'Temel',60:'Orta',80:'İleri',100:'Uzman'},
+    techSkills: 'Teknik Beceriler',
+    softwareSkills: 'Yazılım &amp; Araçlar',
+    softSkills: 'Kişisel Beceriler',
+    cefrTitle: 'Dil Becerileri',
+    cefrLang: 'Dil',
+    cefrUnderstanding: 'Anlama',
+    cefrSpeaking: 'Konuşma',
+    cefrReading: 'Okuma',
+    cefrListening: 'Dinleme',
+    cefrInteraction: 'Etkileşim',
+    cefrPresentation: 'Sunum',
+    cefrWriting: 'Yazma',
+    cefrNote: '(*) Ortak Avrupa Dil Çerçevesi (CEFR): A1/A2 Başlangıç · B1/B2 Bağımsız · C1/C2 İleri',
+  },
+  en: {
+    months: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+    ongoing: 'Present',
+    contact: 'Contact',
+    summary: 'Professional Summary',
+    experience: 'Work Experience',
+    education: 'Education',
+    skills: 'Skills',
+    languages: 'Languages',
+    certifications: 'Certifications',
+    projects: 'Projects',
+    volunteer: 'Volunteer Work',
+    awards: 'Awards',
+    awardsEp: 'Awards &amp; Achievements',
+    publications: 'Publications',
+    references: 'References',
+    hobbies: 'Hobbies',
+    hobbiesEp: 'Hobbies &amp; Interests',
+    position: 'Position',
+    school: 'School',
+    gpa: 'GPA',
+    license: 'License',
+    refOnRequest: 'References available upon request.',
+    epRefOnRequest: 'Available upon request.',
+    epEducation: 'Education and Training',
+    langLvls: ['','A1 Beginner','A2 Elementary','B1 Intermediate','B2 Upper Intermediate','C1 Advanced','C2 Native'],
+    skillLvls: {20:'Beginner',40:'Elementary',60:'Intermediate',80:'Advanced',100:'Expert'},
+    techSkills: 'Technical Skills',
+    softwareSkills: 'Software &amp; Tools',
+    softSkills: 'Soft Skills',
+    cefrTitle: 'Language Skills',
+    cefrLang: 'Language',
+    cefrUnderstanding: 'Understanding',
+    cefrSpeaking: 'Speaking',
+    cefrReading: 'Reading',
+    cefrListening: 'Listening',
+    cefrInteraction: 'Interaction',
+    cefrPresentation: 'Spoken Production',
+    cefrWriting: 'Writing',
+    cefrNote: '(*) Common European Framework of Reference (CEFR): A1/A2 Basic · B1/B2 Independent · C1/C2 Proficient',
+  }
+};
+
+let lang = TRANSLATIONS.tr;
 
 function initDarkMode() {
   isDarkMode = localStorage.getItem(DARK_MODE_KEY) === 'true';
@@ -42,6 +130,7 @@ function startNewCV() {
   photoDataUrl = null;
   resetForm();
   applyTheme('classic');
+  applyCVLanguage('tr');
   showPage('editor');
   updatePreview();
 }
@@ -56,6 +145,19 @@ function selectTheme(theme) {
 
 function applyTheme(theme) {
   document.body.className = 'theme-' + theme + (isDarkMode ? ' dark-mode' : '');
+}
+
+function selectCVLanguage(l) {
+  currentCVLanguage = l;
+  applyCVLanguage(l);
+  updatePreview();
+}
+
+function applyCVLanguage(l) {
+  currentCVLanguage = l;
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+  const btn = document.getElementById('langBtn-' + l);
+  if (btn) btn.classList.add('active');
 }
 
 function showSection(name, btn) {
@@ -214,9 +316,9 @@ let hobbies = [];
 
 function addHobby() {
   const input = document.getElementById('hobbyInput');
-  const val = input.value.trim();
-  if (!val) return;
-  hobbies.push(val);
+  const v = input.value.trim();
+  if (!v) return;
+  hobbies.push(v);
   input.value = '';
   renderHobbies();
   updatePreview();
@@ -250,6 +352,7 @@ function val(id) {
 function collectData() {
   const data = {
     theme: currentTheme,
+    cvLanguage: currentCVLanguage,
     title: val('cvTitle'),
     photo: photoDataUrl,
     showPhoto: document.getElementById('showPhoto')?.checked ?? true,
@@ -314,6 +417,8 @@ function updatePreview() {
 }
 
 function buildCVHTML(d) {
+  lang = TRANSLATIONS[d.cvLanguage || 'tr'];
+
   const p = d.personal;
   const fullName = [p.firstName, p.lastName].filter(Boolean).join(' ') || 'Adınız Soyadınız';
 
@@ -338,7 +443,7 @@ function buildCVHTML(d) {
   if (p.birthDate) sideInfo.push({ icon:'fa-calendar', text: formatDate(p.birthDate) });
   if (p.nationality) sideInfo.push({ icon:'fa-flag', text: p.nationality });
   if (p.maritalStatus) sideInfo.push({ icon:'fa-heart', text: p.maritalStatus });
-  if (p.drivingLicense) sideInfo.push({ icon:'fa-car', text: 'Ehliyet: ' + p.drivingLicense });
+  if (p.drivingLicense) sideInfo.push({ icon:'fa-car', text: lang.license + ': ' + p.drivingLicense });
   if (p.linkedin) sideInfo.push({ icon:'fa-linkedin fab', text: p.linkedin });
   if (p.website) sideInfo.push({ icon:'fa-globe', text: p.website });
   if (p.github) sideInfo.push({ icon:'fa-github fab', text: p.github });
@@ -346,11 +451,9 @@ function buildCVHTML(d) {
   const sideInfoHTML = sideInfo.map(i => `<div class="cv-info-item"><i class="fas ${i.icon}"></i><span>${i.text}</span></div>`).join('');
 
   const theme = d.theme || 'classic';
-
   if (theme === 'minimal') return buildMinimalCV(d, fullName, photoHTML, contacts, sideInfo);
   if (theme === 'modern') return buildModernCV(d, fullName, photoHTML, contacts, sideInfoHTML);
   if (theme === 'europass') return buildEuropassCV(d, fullName, photoHTML);
-
   return buildTwoColCV(d, fullName, photoHTML, contacts, sideInfoHTML, theme);
 }
 
@@ -368,10 +471,10 @@ function buildTwoColCV(d, fullName, photoHTML, contacts, sideInfoHTML, theme) {
 
   const sidebar = `
     <div class="cv-sidebar">
-      ${sideInfoHTML ? `<div class="cv-section"><div class="cv-section-title">İletişim</div>${sideInfoHTML}</div>` : ''}
+      ${sideInfoHTML ? `<div class="cv-section"><div class="cv-section-title">${lang.contact}</div>${sideInfoHTML}</div>` : ''}
       ${buildSkillsSidebar(d.skills)}
       ${buildLanguagesSidebar(d.languages)}
-      ${d.hobbies.length ? `<div class="cv-section"><div class="cv-section-title">Hobiler</div><div class="cv-hobby-tags">${d.hobbies.map(h=>`<span class="cv-hobby-tag">${h}</span>`).join('')}</div></div>` : ''}
+      ${d.hobbies.length ? `<div class="cv-section"><div class="cv-section-title">${lang.hobbies}</div><div class="cv-hobby-tags">${d.hobbies.map(h=>`<span class="cv-hobby-tag">${h}</span>`).join('')}</div></div>` : ''}
     </div>`;
 
   const main = `
@@ -410,7 +513,7 @@ function buildModernCV(d, fullName, photoHTML, contacts, sideInfoHTML) {
         ${sideInfoHTML}
         ${buildSkillsSidebar(d.skills)}
         ${buildLanguagesSidebar(d.languages)}
-        ${d.hobbies.length ? `<div class="cv-section"><div class="cv-section-title">Hobiler</div><div class="cv-hobby-tags">${d.hobbies.map(h=>`<span class="cv-hobby-tag">${h}</span>`).join('')}</div></div>` : ''}
+        ${d.hobbies.length ? `<div class="cv-section"><div class="cv-section-title">${lang.hobbies}</div><div class="cv-hobby-tags">${d.hobbies.map(h=>`<span class="cv-hobby-tag">${h}</span>`).join('')}</div></div>` : ''}
       </div>
       <div class="cv-main">
         ${buildSummarySection(d.summary)}
@@ -444,7 +547,7 @@ function buildEuropassCV(d, fullName, photoHTML) {
   if (p.nationality) detailItems.push({ icon:'fa-flag', label:'Milliyet', text:p.nationality });
   if (p.gender) detailItems.push({ icon:'fa-user', label:'Cinsiyet', text:p.gender });
   if (p.maritalStatus) detailItems.push({ icon:'fa-heart', label:'Medeni Durum', text:p.maritalStatus });
-  if (p.drivingLicense) detailItems.push({ icon:'fa-car', label:'Ehliyet', text:p.drivingLicense });
+  if (p.drivingLicense) detailItems.push({ icon:'fa-car', label:lang.license, text:p.drivingLicense });
 
   const contactHTML = contactItems.map(c => `<span class="ep-contact-item"><i class="fas ${c.icon}"></i>${c.text}</span>`).join('');
   const detailsHTML = detailItems.map(di => `<div class="ep-detail-item"><i class="fas ${di.icon}"></i><span class="ep-detail-label">${di.label}:</span> ${di.text}</div>`).join('');
@@ -452,20 +555,20 @@ function buildEuropassCV(d, fullName, photoHTML) {
   const allSkills = [...(d.skills.technical||[]),...(d.skills.software||[]),...(d.skills.soft||[])];
   const skillsHTML = allSkills.length ? `
     <div class="ep-section">
-      <div class="ep-section-title"><i class="fas fa-star"></i> Beceriler</div>
+      <div class="ep-section-title"><i class="fas fa-star"></i> ${lang.skills}</div>
       <div class="ep-timeline-entry">
         <div class="ep-date"></div>
         <div class="ep-content">
-          ${d.skills.technical.length ? `<div class="ep-skill-group"><strong>Teknik Beceriler</strong><div class="ep-skill-tags">${d.skills.technical.map(s=>`<span class="ep-skill-chip">${s.name}</span>`).join('')}</div></div>` : ''}
-          ${d.skills.software.length ? `<div class="ep-skill-group"><strong>Yazılım &amp; Araçlar</strong><div class="ep-skill-tags">${d.skills.software.map(s=>`<span class="ep-skill-chip">${s.name}</span>`).join('')}</div></div>` : ''}
-          ${d.skills.soft.length ? `<div class="ep-skill-group"><strong>Kişisel Beceriler</strong><div class="ep-skill-tags">${d.skills.soft.map(s=>`<span class="ep-skill-chip">${s.name}</span>`).join('')}</div></div>` : ''}
+          ${d.skills.technical.length ? `<div class="ep-skill-group"><strong>${lang.techSkills}</strong><div class="ep-skill-tags">${d.skills.technical.map(s=>`<span class="ep-skill-chip">${s.name}</span>`).join('')}</div></div>` : ''}
+          ${d.skills.software.length ? `<div class="ep-skill-group"><strong>${lang.softwareSkills}</strong><div class="ep-skill-tags">${d.skills.software.map(s=>`<span class="ep-skill-chip">${s.name}</span>`).join('')}</div></div>` : ''}
+          ${d.skills.soft.length ? `<div class="ep-skill-group"><strong>${lang.softSkills}</strong><div class="ep-skill-tags">${d.skills.soft.map(s=>`<span class="ep-skill-chip">${s.name}</span>`).join('')}</div></div>` : ''}
         </div>
       </div>
     </div>` : '';
 
   const hobbyHTML = d.hobbies.length ? `
     <div class="ep-section">
-      <div class="ep-section-title"><i class="fas fa-heart"></i> Hobiler &amp; İlgi Alanları</div>
+      <div class="ep-section-title"><i class="fas fa-heart"></i> ${lang.hobbiesEp}</div>
       <div class="ep-timeline-entry">
         <div class="ep-date"></div>
         <div class="ep-content ep-skill-tags">${d.hobbies.map(h=>`<span class="ep-skill-chip">${h}</span>`).join('')}</div>
@@ -474,7 +577,7 @@ function buildEuropassCV(d, fullName, photoHTML) {
 
   const summaryHTML = (d.summary.text || d.summary.objective) ? `
     <div class="ep-section">
-      <div class="ep-section-title"><i class="fas fa-align-left"></i> Profesyonel Özet</div>
+      <div class="ep-section-title"><i class="fas fa-align-left"></i> ${lang.summary}</div>
       <div class="ep-timeline-entry">
         <div class="ep-date"></div>
         <div class="ep-content">
@@ -522,12 +625,12 @@ function buildEpExperience(items) {
     <div class="ep-timeline-entry">
       <div class="ep-date">${formatPeriod(i.start, i.end)}</div>
       <div class="ep-content">
-        <div class="ep-entry-title">${i.title || 'Pozisyon'}</div>
+        <div class="ep-entry-title">${i.title || lang.position}</div>
         ${i.company ? `<div class="ep-entry-org">${i.company}${i.location ? ', ' + i.location : ''}${i.emptype ? ' · ' + i.emptype : ''}</div>` : ''}
         ${i.desc ? `<div class="ep-entry-desc">${nl2br(i.desc)}</div>` : ''}
       </div>
     </div>`).join('');
-  return `<div class="ep-section"><div class="ep-section-title"><i class="fas fa-briefcase"></i> İş Deneyimi</div>${rows}</div>`;
+  return `<div class="ep-section"><div class="ep-section-title"><i class="fas fa-briefcase"></i> ${lang.experience}</div>${rows}</div>`;
 }
 
 function buildEpEducation(items) {
@@ -536,12 +639,12 @@ function buildEpEducation(items) {
     <div class="ep-timeline-entry">
       <div class="ep-date">${formatPeriod(i.start, i.end)}</div>
       <div class="ep-content">
-        <div class="ep-entry-title">${[i.degree, i.field].filter(Boolean).join(' – ') || 'Eğitim'}</div>
-        ${i.school ? `<div class="ep-entry-org">${i.school}${i.gpa ? ' · GPA: ' + i.gpa : ''}</div>` : ''}
+        <div class="ep-entry-title">${[i.degree, i.field].filter(Boolean).join(' – ') || lang.education}</div>
+        ${i.school ? `<div class="ep-entry-org">${i.school}${i.gpa ? ' · ' + lang.gpa + ': ' + i.gpa : ''}</div>` : ''}
         ${i.desc ? `<div class="ep-entry-desc">${nl2br(i.desc)}</div>` : ''}
       </div>
     </div>`).join('');
-  return `<div class="ep-section"><div class="ep-section-title"><i class="fas fa-graduation-cap"></i> Eğitim ve Öğretim</div>${rows}</div>`;
+  return `<div class="ep-section"><div class="ep-section-title"><i class="fas fa-graduation-cap"></i> ${lang.epEducation}</div>${rows}</div>`;
 }
 
 function buildEpLanguages(langs) {
@@ -562,25 +665,25 @@ function buildEpLanguages(langs) {
   }).join('');
   return `
     <div class="ep-section">
-      <div class="ep-section-title"><i class="fas fa-language"></i> Dil Becerileri</div>
+      <div class="ep-section-title"><i class="fas fa-language"></i> ${lang.cefrTitle}</div>
       <div class="ep-timeline-entry">
         <div class="ep-date"></div>
         <div class="ep-content">
           <table class="eu-lang-table">
             <thead>
               <tr class="eu-lang-thead-top">
-                <th rowspan="2">Dil</th>
-                <th colspan="2">Anlama</th>
-                <th colspan="2">Konuşma</th>
-                <th>Yazma</th>
+                <th rowspan="2">${lang.cefrLang}</th>
+                <th colspan="2">${lang.cefrUnderstanding}</th>
+                <th colspan="2">${lang.cefrSpeaking}</th>
+                <th>${lang.cefrWriting}</th>
               </tr>
               <tr class="eu-lang-thead-sub">
-                <th>Okuma</th><th>Dinleme</th><th>Etkileşim</th><th>Sunum</th><th>Yazma</th>
+                <th>${lang.cefrReading}</th><th>${lang.cefrListening}</th><th>${lang.cefrInteraction}</th><th>${lang.cefrPresentation}</th><th>${lang.cefrWriting}</th>
               </tr>
             </thead>
             <tbody>${rows}</tbody>
           </table>
-          <div class="eu-cefr-note">(*) Ortak Avrupa Dil Çerçevesi (CEFR): A1/A2 Başlangıç · B1/B2 Bağımsız · C1/C2 İleri</div>
+          <div class="eu-cefr-note">${lang.cefrNote}</div>
         </div>
       </div>
     </div>`;
@@ -596,7 +699,7 @@ function buildEpCertSection(items) {
         ${i.issuer ? `<div class="ep-entry-org">${i.issuer}${i.validity ? ' · ' + i.validity : ''}</div>` : ''}
       </div>
     </div>`).join('');
-  return `<div class="ep-section"><div class="ep-section-title"><i class="fas fa-certificate"></i> Sertifikalar</div>${rows}</div>`;
+  return `<div class="ep-section"><div class="ep-section-title"><i class="fas fa-certificate"></i> ${lang.certifications}</div>${rows}</div>`;
 }
 
 function buildEpProjectSection(items) {
@@ -611,7 +714,7 @@ function buildEpProjectSection(items) {
         ${i.desc ? `<div class="ep-entry-desc">${nl2br(i.desc)}</div>` : ''}
       </div>
     </div>`).join('');
-  return `<div class="ep-section"><div class="ep-section-title"><i class="fas fa-code"></i> Projeler</div>${rows}</div>`;
+  return `<div class="ep-section"><div class="ep-section-title"><i class="fas fa-code"></i> ${lang.projects}</div>${rows}</div>`;
 }
 
 function buildEpVolunteerSection(items) {
@@ -625,7 +728,7 @@ function buildEpVolunteerSection(items) {
         ${i.desc ? `<div class="ep-entry-desc">${nl2br(i.desc)}</div>` : ''}
       </div>
     </div>`).join('');
-  return `<div class="ep-section"><div class="ep-section-title"><i class="fas fa-hands-helping"></i> Gönüllü Çalışmalar</div>${rows}</div>`;
+  return `<div class="ep-section"><div class="ep-section-title"><i class="fas fa-hands-helping"></i> ${lang.volunteer}</div>${rows}</div>`;
 }
 
 function buildEpAwardSection(items) {
@@ -639,7 +742,7 @@ function buildEpAwardSection(items) {
         ${i.desc ? `<div class="ep-entry-desc">${nl2br(i.desc)}</div>` : ''}
       </div>
     </div>`).join('');
-  return `<div class="ep-section"><div class="ep-section-title"><i class="fas fa-trophy"></i> Ödüller &amp; Başarılar</div>${rows}</div>`;
+  return `<div class="ep-section"><div class="ep-section-title"><i class="fas fa-trophy"></i> ${lang.awardsEp}</div>${rows}</div>`;
 }
 
 function buildEpPublicationSection(items) {
@@ -652,17 +755,17 @@ function buildEpPublicationSection(items) {
         ${i.publisher ? `<div class="ep-entry-org">${i.publisher}</div>` : ''}
       </div>
     </div>`).join('');
-  return `<div class="ep-section"><div class="ep-section-title"><i class="fas fa-book"></i> Yayınlar</div>${rows}</div>`;
+  return `<div class="ep-section"><div class="ep-section-title"><i class="fas fa-book"></i> ${lang.publications}</div>${rows}</div>`;
 }
 
 function buildEpReferenceSection(refs) {
   if (!refs || refs.display === 'none') return '';
   if (refs.display === 'request') return `
     <div class="ep-section">
-      <div class="ep-section-title"><i class="fas fa-user-check"></i> Referanslar</div>
+      <div class="ep-section-title"><i class="fas fa-user-check"></i> ${lang.references}</div>
       <div class="ep-timeline-entry">
         <div class="ep-date"></div>
-        <div class="ep-content ep-entry-desc" style="font-style:italic">İstek üzerine sunulacaktır.</div>
+        <div class="ep-content ep-entry-desc" style="font-style:italic">${lang.epRefOnRequest}</div>
       </div>
     </div>`;
   if (!refs.items || !refs.items.length) return '';
@@ -675,7 +778,7 @@ function buildEpReferenceSection(refs) {
         <div class="ep-entry-desc">${[r.email, r.phone].filter(Boolean).join(' | ')}${r.relation ? ' · ' + r.relation : ''}</div>
       </div>
     </div>`).join('');
-  return `<div class="ep-section"><div class="ep-section-title"><i class="fas fa-user-check"></i> Referanslar</div>${rows}</div>`;
+  return `<div class="ep-section"><div class="ep-section-title"><i class="fas fa-user-check"></i> ${lang.references}</div>${rows}</div>`;
 }
 
 function buildMinimalCV(d, fullName, photoHTML, contacts, sideInfo) {
@@ -701,14 +804,14 @@ function buildMinimalCV(d, fullName, photoHTML, contacts, sideInfo) {
         ${buildSummarySection(d.summary)}
         ${buildExperienceSection(d.experience)}
         ${buildEducationSection(d.education)}
-        ${allSkills.length ? `<div class="cv-section"><div class="cv-section-title">Beceriler</div><div>${skillTags}</div></div>` : ''}
+        ${allSkills.length ? `<div class="cv-section"><div class="cv-section-title">${lang.skills}</div><div>${skillTags}</div></div>` : ''}
         ${buildLanguagesInline(d.languages)}
         ${buildCertSection(d.certifications)}
         ${buildProjectSection(d.projects)}
         ${buildVolunteerSection(d.volunteer)}
         ${buildAwardSection(d.awards)}
         ${buildPublicationSection(d.publications)}
-        ${d.hobbies.length ? `<div class="cv-section"><div class="cv-section-title">Hobiler</div><div class="cv-hobby-tags">${d.hobbies.map(h=>`<span class="cv-hobby-tag">${h}</span>`).join('')}</div></div>` : ''}
+        ${d.hobbies.length ? `<div class="cv-section"><div class="cv-section-title">${lang.hobbies}</div><div class="cv-hobby-tags">${d.hobbies.map(h=>`<span class="cv-hobby-tag">${h}</span>`).join('')}</div></div>` : ''}
         ${buildReferenceSection(d.references)}
       </div>
     </div>`;
@@ -717,7 +820,7 @@ function buildMinimalCV(d, fullName, photoHTML, contacts, sideInfo) {
 
 function buildSummarySection(s) {
   if (!s.text && !s.objective) return '';
-  let html = '<div class="cv-section"><div class="cv-section-title">Profesyonel Özet</div>';
+  let html = `<div class="cv-section"><div class="cv-section-title">${lang.summary}</div>`;
   if (s.text) html += `<div class="cv-summary-text">${nl2br(s.text)}</div>`;
   if (s.objective) html += `<div class="cv-summary-text" style="margin-top:8px;font-style:italic;color:#64748b">${nl2br(s.objective)}</div>`;
   return html + '</div>';
@@ -729,14 +832,14 @@ function buildExperienceSection(items) {
     const period = formatPeriod(i.start, i.end);
     return `<div class="cv-item">
       <div class="cv-item-header">
-        <span class="cv-item-title">${i.title || 'Pozisyon'}</span>
+        <span class="cv-item-title">${i.title || lang.position}</span>
         <span class="cv-item-date">${period}</span>
       </div>
       ${i.company ? `<div class="cv-item-sub">${i.company}${i.location ? ' · ' + i.location : ''}${i.emptype ? ' · ' + i.emptype : ''}</div>` : ''}
       ${i.desc ? `<div class="cv-item-desc">${nl2br(i.desc)}</div>` : ''}
     </div>`;
   }).join('');
-  return `<div class="cv-section"><div class="cv-section-title">İş Deneyimi</div>${rows}</div>`;
+  return `<div class="cv-section"><div class="cv-section-title">${lang.experience}</div>${rows}</div>`;
 }
 
 function buildEducationSection(items) {
@@ -745,14 +848,14 @@ function buildEducationSection(items) {
     const period = formatPeriod(i.start, i.end);
     return `<div class="cv-item">
       <div class="cv-item-header">
-        <span class="cv-item-title">${i.school || 'Okul'}</span>
+        <span class="cv-item-title">${i.school || lang.school}</span>
         <span class="cv-item-date">${period}</span>
       </div>
-      ${(i.degree||i.field) ? `<div class="cv-item-sub">${[i.degree,i.field].filter(Boolean).join(' – ')}${i.gpa ? ' · GPA: ' + i.gpa : ''}</div>` : ''}
+      ${(i.degree||i.field) ? `<div class="cv-item-sub">${[i.degree,i.field].filter(Boolean).join(' – ')}${i.gpa ? ' · ' + lang.gpa + ': ' + i.gpa : ''}</div>` : ''}
       ${i.desc ? `<div class="cv-item-desc">${nl2br(i.desc)}</div>` : ''}
     </div>`;
   }).join('');
-  return `<div class="cv-section"><div class="cv-section-title">Eğitim</div>${rows}</div>`;
+  return `<div class="cv-section"><div class="cv-section-title">${lang.education}</div>${rows}</div>`;
 }
 
 function buildSkillsSidebar(skills) {
@@ -767,7 +870,7 @@ function buildSkillsSidebar(skills) {
       <div class="cv-skill-label"><span>${s.name}</span><span>${levelLabel(s.level)}</span></div>
       <div class="cv-skill-bar"><div class="cv-skill-bar-fill" style="width:${s.level}%"></div></div>
     </div>`).join('');
-  return `<div class="cv-section"><div class="cv-section-title">Beceriler</div>${bars}</div>`;
+  return `<div class="cv-section"><div class="cv-section-title">${lang.skills}</div>${bars}</div>`;
 }
 
 function buildLanguagesSidebar(langs) {
@@ -781,7 +884,7 @@ function buildLanguagesSidebar(langs) {
       <div class="cv-lang-dots">${dots}</div>
     </div>`;
   }).join('');
-  return `<div class="cv-section"><div class="cv-section-title">Diller</div>${rows}</div>`;
+  return `<div class="cv-section"><div class="cv-section-title">${lang.languages}</div>${rows}</div>`;
 }
 
 function buildLanguagesInline(langs) {
@@ -790,7 +893,7 @@ function buildLanguagesInline(langs) {
     const lvl = parseInt(l.level) || 3;
     return `<span style="margin-right:16px;font-size:13px"><strong>${l.name}</strong> <span style="color:#64748b">${langLabel(lvl)}</span></span>`;
   }).join('');
-  return `<div class="cv-section"><div class="cv-section-title">Diller</div><div style="padding:4px 0">${rows}</div></div>`;
+  return `<div class="cv-section"><div class="cv-section-title">${lang.languages}</div><div style="padding:4px 0">${rows}</div></div>`;
 }
 
 function buildCertSection(items) {
@@ -802,7 +905,7 @@ function buildCertSection(items) {
     </div>
     ${i.issuer ? `<div class="cv-item-sub">${i.issuer}${i.validity ? ' · ' + i.validity : ''}</div>` : ''}
   </div>`).join('');
-  return `<div class="cv-section"><div class="cv-section-title">Sertifikalar</div>${rows}</div>`;
+  return `<div class="cv-section"><div class="cv-section-title">${lang.certifications}</div>${rows}</div>`;
 }
 
 function buildProjectSection(items) {
@@ -816,7 +919,7 @@ function buildProjectSection(items) {
     ${i.tech ? `<div style="margin:4px 0">${i.tech.split(',').map(t=>`<span class="cv-skill-tag">${t.trim()}</span>`).join('')}</div>` : ''}
     ${i.desc ? `<div class="cv-item-desc">${nl2br(i.desc)}</div>` : ''}
   </div>`).join('');
-  return `<div class="cv-section"><div class="cv-section-title">Projeler</div>${rows}</div>`;
+  return `<div class="cv-section"><div class="cv-section-title">${lang.projects}</div>${rows}</div>`;
 }
 
 function buildVolunteerSection(items) {
@@ -829,7 +932,7 @@ function buildVolunteerSection(items) {
     ${i.role ? `<div class="cv-item-sub">${i.role}</div>` : ''}
     ${i.desc ? `<div class="cv-item-desc">${nl2br(i.desc)}</div>` : ''}
   </div>`).join('');
-  return `<div class="cv-section"><div class="cv-section-title">Gönüllü Çalışmalar</div>${rows}</div>`;
+  return `<div class="cv-section"><div class="cv-section-title">${lang.volunteer}</div>${rows}</div>`;
 }
 
 function buildAwardSection(items) {
@@ -842,7 +945,7 @@ function buildAwardSection(items) {
     ${i.issuer ? `<div class="cv-item-sub">${i.issuer}</div>` : ''}
     ${i.desc ? `<div class="cv-item-desc">${nl2br(i.desc)}</div>` : ''}
   </div>`).join('');
-  return `<div class="cv-section"><div class="cv-section-title">Ödüller</div>${rows}</div>`;
+  return `<div class="cv-section"><div class="cv-section-title">${lang.awards}</div>${rows}</div>`;
 }
 
 function buildPublicationSection(items) {
@@ -854,33 +957,32 @@ function buildPublicationSection(items) {
     </div>
     ${i.publisher ? `<div class="cv-item-sub">${i.publisher}</div>` : ''}
   </div>`).join('');
-  return `<div class="cv-section"><div class="cv-section-title">Yayınlar</div>${rows}</div>`;
+  return `<div class="cv-section"><div class="cv-section-title">${lang.publications}</div>${rows}</div>`;
 }
 
 function buildReferenceSection(refs) {
   if (!refs) return '';
   if (refs.display === 'none') return '';
-  if (refs.display === 'request') return `<div class="cv-section"><div class="cv-section-title">Referanslar</div><div class="cv-request-text">Referanslar istek üzerine sunulacaktır.</div></div>`;
+  if (refs.display === 'request') return `<div class="cv-section"><div class="cv-section-title">${lang.references}</div><div class="cv-request-text">${lang.refOnRequest}</div></div>`;
   if (!refs.items || !refs.items.length) return '';
   const rows = refs.items.map(r => `<div class="cv-ref-item">
     <div class="cv-ref-name">${r.name}</div>
     <div class="cv-ref-title">${[r.title, r.company].filter(Boolean).join(' – ')}</div>
     <div class="cv-ref-contact">${[r.email, r.phone].filter(Boolean).join(' | ')}${r.relation ? ' · ' + r.relation : ''}</div>
   </div>`).join('');
-  return `<div class="cv-section"><div class="cv-section-title">Referanslar</div>${rows}</div>`;
+  return `<div class="cv-section"><div class="cv-section-title">${lang.references}</div>${rows}</div>`;
 }
 
 function formatMonth(m) {
   if (!m) return '';
   const [y, mo] = m.split('-');
-  const months = ['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'];
-  return months[parseInt(mo)-1] + ' ' + y;
+  return lang.months[parseInt(mo)-1] + ' ' + y;
 }
 
 function formatPeriod(start, end) {
   const s = formatMonth(start);
-  const e = end ? formatMonth(end) : 'Devam ediyor';
-  if (!s) return e !== 'Devam ediyor' ? e : '';
+  const e = end ? formatMonth(end) : lang.ongoing;
+  if (!s) return e !== lang.ongoing ? e : '';
   return s + ' – ' + e;
 }
 
@@ -890,18 +992,17 @@ function formatDate(d) {
   return `${day}.${m}.${y}`;
 }
 
-function levelLabel(val) {
-  const v = parseInt(val);
-  if (v <= 20) return 'Başlangıç';
-  if (v <= 40) return 'Temel';
-  if (v <= 60) return 'Orta';
-  if (v <= 80) return 'İleri';
-  return 'Uzman';
+function levelLabel(v) {
+  const n = parseInt(v);
+  if (n <= 20) return lang.skillLvls[20];
+  if (n <= 40) return lang.skillLvls[40];
+  if (n <= 60) return lang.skillLvls[60];
+  if (n <= 80) return lang.skillLvls[80];
+  return lang.skillLvls[100];
 }
 
 function langLabel(lvl) {
-  const labels = ['','A1 Başlangıç','A2 Temel','B1 Orta','B2 Orta Üstü','C1 İleri','C2 Anadil'];
-  return labels[lvl] || '';
+  return lang.langLvls[lvl] || '';
 }
 
 function nl2br(str) {
@@ -953,6 +1054,7 @@ function loadCV(id) {
   resetForm();
   applyTheme(currentTheme);
   selectTheme(currentTheme);
+  applyCVLanguage(data.cvLanguage || 'tr');
 
   const p = data.personal || {};
   setVal('cvTitle', data.title);
@@ -1026,6 +1128,33 @@ function deleteCV(id) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(cvs));
   renderCVList();
   showToast('CV silindi.', 'success');
+}
+
+function copyCV(id) {
+  const cvs = loadAllCVs();
+  const original = cvs[id];
+  if (!original) return;
+  const copy = JSON.parse(JSON.stringify(original));
+  const newId = 'cv_' + Date.now();
+  copy.id = newId;
+  copy.title = (copy.title || 'Başlıksız CV') + ' (Kopya)';
+  copy.savedAt = new Date().toLocaleString('tr-TR');
+  cvs[newId] = copy;
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(cvs));
+    renderCVList();
+    showToast('CV kopyalandı!', 'success');
+  } catch (e) {
+    if (e.name === 'QuotaExceededError' || e.code === 22 || e.code === 1014) {
+      copy.photo = null;
+      cvs[newId] = copy;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(cvs));
+      renderCVList();
+      showToast('CV kopyalandı (fotoğraf hariç)', 'success');
+    } else {
+      showToast('Kopyalama başarısız', 'error');
+    }
+  }
 }
 
 function exportAllCVs() {
@@ -1124,14 +1253,21 @@ function renderCVList() {
     const name = cv.personal ? [cv.personal.firstName, cv.personal.lastName].filter(Boolean).join(' ') : '';
     const themeColors = { classic:'#2563eb', modern:'#7c3aed', creative:'#db2777', minimal:'#374151', executive:'#b45309', europass:'#003399' };
     const color = themeColors[cv.theme] || '#2563eb';
+    const langBadge = cv.cvLanguage === 'en'
+      ? `<span class="cv-card-theme" style="background:#f0fdf4;color:#16a34a;margin-left:4px">🇬🇧 EN</span>`
+      : `<span class="cv-card-theme" style="background:#eff6ff;color:#2563eb;margin-left:4px">🇹🇷 TR</span>`;
     return `<div class="cv-card">
       <div class="cv-card-title">${cv.title || 'Başlıksız CV'}</div>
       ${name ? `<div class="cv-card-meta"><i class="fas fa-user" style="color:${color}"></i> ${name}</div>` : ''}
       <div class="cv-card-meta"><i class="fas fa-clock"></i> ${cv.savedAt || ''}</div>
-      <span class="cv-card-theme" style="background:${color}20;color:${color}">${(cv.theme||'classic').charAt(0).toUpperCase()+(cv.theme||'classic').slice(1)}</span>
+      <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
+        <span class="cv-card-theme" style="background:${color}20;color:${color}">${(cv.theme||'classic').charAt(0).toUpperCase()+(cv.theme||'classic').slice(1)}</span>
+        ${langBadge}
+      </div>
       <div class="cv-card-actions">
         <button class="btn btn-primary btn-sm" onclick="loadCV('${cv.id}')"><i class="fas fa-edit"></i> Düzenle</button>
-        <button class="btn btn-secondary btn-sm" onclick="exportSingleCV('${cv.id}')" title="Bu CV'yi JSON olarak indir"><i class="fas fa-download"></i></button>
+        <button class="btn btn-secondary btn-sm" onclick="copyCV('${cv.id}')" title="Kopyala"><i class="fas fa-copy"></i></button>
+        <button class="btn btn-secondary btn-sm" onclick="exportSingleCV('${cv.id}')" title="JSON olarak indir"><i class="fas fa-download"></i></button>
         <button class="btn btn-danger btn-sm" onclick="deleteCV('${cv.id}')"><i class="fas fa-trash"></i></button>
       </div>
     </div>`;

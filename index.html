@@ -110,15 +110,24 @@
           <label class="cv-title-label highlight-label"><i class="fas fa-heading"></i> CV'de Görünen Başlık / Unvan <span class="badge-cv">CV'ye yansır</span></label>
           <input type="text" id="jobTitleTop" placeholder="ör: Yazılım Geliştirici, Pazarlama Uzmanı..." class="cv-title-input headline-input" oninput="syncJobTitle(this.value)" />
         </div>
-        <div class="theme-selector">
-          <span>Tema:</span>
-          <div class="theme-dots">
-            <button class="theme-dot theme-classic-dot active" title="Classic" onclick="selectTheme('classic')"></button>
-            <button class="theme-dot theme-modern-dot" title="Modern" onclick="selectTheme('modern')"></button>
-            <button class="theme-dot theme-creative-dot" title="Creative" onclick="selectTheme('creative')"></button>
-            <button class="theme-dot theme-minimal-dot" title="Minimal" onclick="selectTheme('minimal')"></button>
-            <button class="theme-dot theme-executive-dot" title="Executive" onclick="selectTheme('executive')"></button>
-            <button class="theme-dot theme-europass-dot" title="Europass (AB Standardı)" onclick="selectTheme('europass')"></button>
+        <div class="theme-lang-row">
+          <div class="theme-selector">
+            <span>Tema:</span>
+            <div class="theme-dots">
+              <button class="theme-dot theme-classic-dot active" title="Classic" onclick="selectTheme('classic')"></button>
+              <button class="theme-dot theme-modern-dot" title="Modern" onclick="selectTheme('modern')"></button>
+              <button class="theme-dot theme-creative-dot" title="Creative" onclick="selectTheme('creative')"></button>
+              <button class="theme-dot theme-minimal-dot" title="Minimal" onclick="selectTheme('minimal')"></button>
+              <button class="theme-dot theme-executive-dot" title="Executive" onclick="selectTheme('executive')"></button>
+              <button class="theme-dot theme-europass-dot" title="Europass (AB Standardı)" onclick="selectTheme('europass')"></button>
+            </div>
+          </div>
+          <div class="lang-selector">
+            <span>CV Dili:</span>
+            <div class="lang-btns">
+              <button class="lang-btn active" id="langBtn-tr" onclick="selectCVLanguage('tr')">🇹🇷 TR</button>
+              <button class="lang-btn" id="langBtn-en" onclick="selectCVLanguage('en')">🇬🇧 EN</button>
+            </div>
           </div>
         </div>
       </div>
