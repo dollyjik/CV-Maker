@@ -1131,22 +1131,32 @@ function saveCV() {
   data.id = currentCVId;
   data.savedAt = new Date().toLocaleString('tr-TR');
   cvs[currentCVId] = data;
+  clearTimeout(autoSaveTimer);
+  const res = persistCV(cvs, currentCVId);
+  if (res === 'ok') showToast('CV başarıyla kaydedildi!', 'success');
+  else if (res === 'photo-dropped') showToast('CV kaydedildi (fotoğraf boyut nedeniyle hariç tutuldu)', 'success');
+  else showToast('Depolama alanı dolu, CV kaydedilemedi', 'error');
+  setSaveStatus(res === 'failed' ? 'error' : 'saved');
+}
+
+// localStorage'a quota-güvenli yazma. Quota dolarsa ilgili CV'nin fotoğrafını
+// düşürüp tekrar dener. Dönüş: 'ok' | 'photo-dropped' | 'failed'.
+function persistCV(cvs, id) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(cvs));
-    showToast('CV başarıyla kaydedildi!', 'success');
+    return 'ok';
   } catch (e) {
     if (e.name === 'QuotaExceededError' || e.code === 22 || e.code === 1014) {
       try {
-        cvs[currentCVId] = { ...data, photo: null };
+        if (id && cvs[id]) cvs[id] = { ...cvs[id], photo: null };
         localStorage.setItem(STORAGE_KEY, JSON.stringify(cvs));
-        showToast('CV kaydedildi (fotoğraf boyut nedeniyle hariç tutuldu)', 'success');
+        return 'photo-dropped';
       } catch (e2) {
-        showToast('Depolama alanı dolu, CV kaydedilemedi', 'error');
+        return 'failed';
       }
-    } else {
-      showToast('Kayıt sırasında hata oluştu', 'error');
-      console.error(e);
     }
+    console.error(e);
+    return 'failed';
   }
 }
 
@@ -1251,21 +1261,10 @@ function copyCV(id) {
   copy.title = (copy.title || 'Başlıksız CV') + ' (Kopya)';
   copy.savedAt = new Date().toLocaleString('tr-TR');
   cvs[newId] = copy;
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(cvs));
-    renderCVList();
-    showToast('CV kopyalandı!', 'success');
-  } catch (e) {
-    if (e.name === 'QuotaExceededError' || e.code === 22 || e.code === 1014) {
-      copy.photo = null;
-      cvs[newId] = copy;
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(cvs));
-      renderCVList();
-      showToast('CV kopyalandı (fotoğraf hariç)', 'success');
-    } else {
-      showToast('Kopyalama başarısız', 'error');
-    }
-  }
+  const res = persistCV(cvs, newId);
+  if (res === 'failed') { showToast('Kopyalama başarısız', 'error'); return; }
+  renderCVList();
+  showToast(res === 'photo-dropped' ? 'CV kopyalandı (fotoğraf hariç)' : 'CV kopyalandı!', 'success');
 }
 
 function exportAllCVs() {
