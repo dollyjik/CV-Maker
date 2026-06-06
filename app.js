@@ -434,6 +434,7 @@ function updatePreview() {
   preview.innerHTML = buildCVHTML(data);
   applyTitleCase(preview, data.cvLanguage);
   requestAnimationFrame(() => injectPageBreaks(preview, data.cvLanguage));
+  if (!isRestoring) scheduleAutoSave();
 }
 
 // Başlıkları CSS text-transform yerine JS'te, dile uygun şekilde büyütür.
@@ -1469,6 +1470,28 @@ function setSaveStatus(state) {
   const s = map[state] || map.neutral;
   el.textContent = s.text;
   el.className = 'save-status' + (s.cls ? ' ' + s.cls : '');
+}
+
+function scheduleAutoSave() {
+  setSaveStatus('saving');
+  clearTimeout(autoSaveTimer);
+  autoSaveTimer = setTimeout(autoSave, 1000);
+}
+
+function autoSave() {
+  const data = collectData();
+  // Minimum içerik yoksa kayıt oluşturma (çöp kayıt önlenir).
+  if (!data.personal.firstName && !data.personal.lastName && !data.title) {
+    setSaveStatus('neutral');
+    return;
+  }
+  const cvs = loadAllCVs();
+  if (!currentCVId) currentCVId = 'cv_' + Date.now();
+  data.id = currentCVId;
+  data.savedAt = new Date().toLocaleString('tr-TR');
+  cvs[currentCVId] = data;
+  const res = persistCV(cvs, currentCVId);
+  setSaveStatus(res === 'failed' ? 'error' : 'saved');
 }
 
 function syncJobTitle(value) {
