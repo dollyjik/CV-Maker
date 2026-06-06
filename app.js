@@ -49,6 +49,8 @@ const TRANSLATIONS = {
     cefrPresentation: 'Sunum',
     cefrWriting: 'Yazma',
     cefrNote: '(*) Ortak Avrupa Dil Çerçevesi (CEFR): A1/A2 Başlangıç · B1/B2 Bağımsız · C1/C2 İleri',
+    empTypes: { 'Tam Zamanlı':'Tam Zamanlı', 'Yarı Zamanlı':'Yarı Zamanlı', 'Staj':'Staj', 'Serbest':'Serbest', 'Uzaktan':'Uzaktan' },
+    degrees: { 'Lisans':'Lisans', 'Yüksek Lisans':'Yüksek Lisans', 'Doktora':'Doktora', 'Ön Lisans':'Ön Lisans', 'Lise':'Lise', 'Sertifika':'Sertifika' },
   },
   en: {
     months: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
@@ -90,6 +92,8 @@ const TRANSLATIONS = {
     cefrPresentation: 'Spoken Production',
     cefrWriting: 'Writing',
     cefrNote: '(*) Common European Framework of Reference (CEFR): A1/A2 Basic · B1/B2 Independent · C1/C2 Proficient',
+    empTypes: { 'Tam Zamanlı':'Full-Time', 'Yarı Zamanlı':'Part-Time', 'Staj':'Internship', 'Serbest':'Freelance', 'Uzaktan':'Remote' },
+    degrees: { 'Lisans':"Bachelor's", 'Yüksek Lisans':"Master's", 'Doktora':'PhD', 'Ön Lisans':"Associate's", 'Lise':'High School', 'Sertifika':'Certificate' },
   }
 };
 
@@ -129,7 +133,7 @@ function startNewCV() {
   currentTheme = 'classic';
   photoDataUrl = null;
   resetForm();
-  applyTheme('classic');
+  selectTheme('classic');
   applyCVLanguage('tr');
   showPage('editor');
   updatePreview();
@@ -172,10 +176,21 @@ function handlePhotoUpload(e) {
   if (!file) return;
   const reader = new FileReader();
   reader.onload = ev => {
-    photoDataUrl = ev.target.result;
-    const prev = document.getElementById('photoPreview');
-    prev.innerHTML = '<img src="' + photoDataUrl + '" alt="photo" />';
-    updatePreview();
+    const img = new Image();
+    img.onload = () => {
+      const size = Math.min(img.width, img.height);
+      const canvas = document.createElement('canvas');
+      canvas.width = 500;
+      canvas.height = 500;
+      const ctx = canvas.getContext('2d');
+      const sx = (img.width - size) / 2;
+      const sy = (img.height - size) / 2;
+      ctx.drawImage(img, sx, sy, size, size, 0, 0, 500, 500);
+      photoDataUrl = canvas.toDataURL('image/jpeg', 0.95);
+      document.getElementById('photoPreview').innerHTML = `<img src="${photoDataUrl}" alt="photo" />`;
+      updatePreview();
+    };
+    img.src = ev.target.result;
   };
   reader.readAsDataURL(file);
 }
@@ -415,10 +430,53 @@ function updatePreview() {
   const preview = document.getElementById('cvPreview');
   preview.setAttribute('lang', data.cvLanguage === 'en' ? 'en' : 'tr');
   preview.innerHTML = buildCVHTML(data);
+  applyTitleCase(preview, data.cvLanguage);
+  requestAnimationFrame(() => injectPageBreaks(preview, data.cvLanguage));
+}
+
+// Başlıkları CSS text-transform yerine JS'te, dile uygun şekilde büyütür.
+// Neden: PDF export'ta html2canvas, CSS uppercase'i yerel-bağımsız toUpperCase()
+// ile uygular; bu da Türkçe "i" harfini noktasız "I" yapar (İLETİŞİM → İLETIŞIM).
+// toLocaleUpperCase('tr') İ'yi korur; İngilizce için 'en' standart davranır.
+function applyTitleCase(preview, cvLang) {
+  const locale = cvLang === 'en' ? 'en-US' : 'tr-TR';
+  preview.querySelectorAll('.cv-section-title, .ep-section-title, .ep-skill-group strong, .eu-cv-label')
+    .forEach(el => {
+      el.style.textTransform = 'none';
+      el.childNodes.forEach(n => {
+        if (n.nodeType === Node.TEXT_NODE && n.textContent.trim()) {
+          n.textContent = n.textContent.toLocaleUpperCase(locale);
+        }
+      });
+    });
+}
+
+function injectPageBreaks(preview, cvLang) {
+  preview.querySelectorAll('.cv-page-sep').forEach(el => el.remove());
+  // 794px genişlikte gerçek A4 yüksekliği ~1122.94px; tam sayfa katlarında
+  // güvenli kalmak için 1122 kullanıyoruz (bkz. .cv-preview min-height notu).
+  const pageH = 1122;
+  // Önceki uzatmayı sıfırla ki gerçek içerik yüksekliğini ölçebilelim.
+  preview.style.minHeight = '';
+  const total = preview.scrollHeight;
+  if (total <= pageH) return;
+  const count = Math.ceil(total / pageH);
+  // Sayfa taşıyorsa önizlemeyi tam sayfa katına uzat: gradient ile çizilen
+  // gri sidebar (classic/creative/executive) son sayfanın sonuna kadar insin.
+  preview.style.minHeight = (count * pageH) + 'px';
+  for (let i = 1; i < count; i++) {
+    const sep = document.createElement('div');
+    sep.className = 'cv-page-sep';
+    sep.style.top = (i * pageH) + 'px';
+    sep.dataset.label = cvLang === 'en' ? `Page ${i + 1}` : `${i + 1}. Sayfa`;
+    preview.appendChild(sep);
+  }
 }
 
 function buildCVHTML(d) {
   lang = TRANSLATIONS[d.cvLanguage || 'tr'];
+  // Tüm kullanıcı girdilerini render öncesi escape et (XSS / HTML bozulması koruması).
+  d = escapeDeep(d);
 
   const p = d.personal;
   const fullName = [p.firstName, p.lastName].filter(Boolean).join(' ') || 'Adınız Soyadınız';
@@ -622,29 +680,35 @@ function buildEuropassCV(d, fullName, photoHTML) {
 
 function buildEpExperience(items) {
   if (!items.length) return '';
-  const rows = items.map(i => `
+  const rows = items.map(i => {
+    const emptype = i.emptype ? (lang.empTypes[i.emptype] || i.emptype) : '';
+    return `
     <div class="ep-timeline-entry">
       <div class="ep-date">${formatPeriod(i.start, i.end)}</div>
       <div class="ep-content">
         <div class="ep-entry-title">${i.title || lang.position}</div>
-        ${i.company ? `<div class="ep-entry-org">${i.company}${i.location ? ', ' + i.location : ''}${i.emptype ? ' · ' + i.emptype : ''}</div>` : ''}
+        ${i.company ? `<div class="ep-entry-org">${i.company}${i.location ? ', ' + i.location : ''}${emptype ? ' · ' + emptype : ''}</div>` : ''}
         ${i.desc ? `<div class="ep-entry-desc">${nl2br(i.desc)}</div>` : ''}
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
   return `<div class="ep-section"><div class="ep-section-title"><i class="fas fa-briefcase"></i> ${lang.experience}</div>${rows}</div>`;
 }
 
 function buildEpEducation(items) {
   if (!items.length) return '';
-  const rows = items.map(i => `
+  const rows = items.map(i => {
+    const degree = i.degree ? (lang.degrees[i.degree] || i.degree) : '';
+    return `
     <div class="ep-timeline-entry">
       <div class="ep-date">${formatPeriod(i.start, i.end)}</div>
       <div class="ep-content">
-        <div class="ep-entry-title">${[i.degree, i.field].filter(Boolean).join(' – ') || lang.education}</div>
+        <div class="ep-entry-title">${[degree, i.field].filter(Boolean).join(' – ') || lang.education}</div>
         ${i.school ? `<div class="ep-entry-org">${i.school}${i.gpa ? ' · ' + lang.gpa + ': ' + i.gpa : ''}</div>` : ''}
         ${i.desc ? `<div class="ep-entry-desc">${nl2br(i.desc)}</div>` : ''}
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
   return `<div class="ep-section"><div class="ep-section-title"><i class="fas fa-graduation-cap"></i> ${lang.epEducation}</div>${rows}</div>`;
 }
 
@@ -692,14 +756,19 @@ function buildEpLanguages(langs) {
 
 function buildEpCertSection(items) {
   if (!items.length) return '';
-  const rows = items.map(i => `
+  const rows = items.map(i => {
+    const nameHTML = i.url
+      ? `<a href="${safeUrl(i.url)}" target="_blank" rel="noopener noreferrer" class="cv-cert-link">${i.name}</a>`
+      : i.name;
+    return `
     <div class="ep-timeline-entry">
       <div class="ep-date">${formatMonth(i.date)}</div>
       <div class="ep-content">
-        <div class="ep-entry-title">${i.name}</div>
+        <div class="ep-entry-title">${nameHTML}</div>
         ${i.issuer ? `<div class="ep-entry-org">${i.issuer}${i.validity ? ' · ' + i.validity : ''}</div>` : ''}
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
   return `<div class="ep-section"><div class="ep-section-title"><i class="fas fa-certificate"></i> ${lang.certifications}</div>${rows}</div>`;
 }
 
@@ -831,12 +900,13 @@ function buildExperienceSection(items) {
   if (!items.length) return '';
   const rows = items.map(i => {
     const period = formatPeriod(i.start, i.end);
+    const emptype = i.emptype ? (lang.empTypes[i.emptype] || i.emptype) : '';
     return `<div class="cv-item">
       <div class="cv-item-header">
         <span class="cv-item-title">${i.title || lang.position}</span>
         <span class="cv-item-date">${period}</span>
       </div>
-      ${i.company ? `<div class="cv-item-sub">${i.company}${i.location ? ' · ' + i.location : ''}${i.emptype ? ' · ' + i.emptype : ''}</div>` : ''}
+      ${i.company ? `<div class="cv-item-sub">${i.company}${i.location ? ' · ' + i.location : ''}${emptype ? ' · ' + emptype : ''}</div>` : ''}
       ${i.desc ? `<div class="cv-item-desc">${nl2br(i.desc)}</div>` : ''}
     </div>`;
   }).join('');
@@ -847,12 +917,13 @@ function buildEducationSection(items) {
   if (!items.length) return '';
   const rows = items.map(i => {
     const period = formatPeriod(i.start, i.end);
+    const degree = i.degree ? (lang.degrees[i.degree] || i.degree) : '';
     return `<div class="cv-item">
       <div class="cv-item-header">
         <span class="cv-item-title">${i.school || lang.school}</span>
         <span class="cv-item-date">${period}</span>
       </div>
-      ${(i.degree||i.field) ? `<div class="cv-item-sub">${[i.degree,i.field].filter(Boolean).join(' – ')}${i.gpa ? ' · ' + lang.gpa + ': ' + i.gpa : ''}</div>` : ''}
+      ${(degree||i.field) ? `<div class="cv-item-sub">${[degree,i.field].filter(Boolean).join(' – ')}${i.gpa ? ' · ' + lang.gpa + ': ' + i.gpa : ''}</div>` : ''}
       ${i.desc ? `<div class="cv-item-desc">${nl2br(i.desc)}</div>` : ''}
     </div>`;
   }).join('');
@@ -899,13 +970,18 @@ function buildLanguagesInline(langs) {
 
 function buildCertSection(items) {
   if (!items.length) return '';
-  const rows = items.map(i => `<div class="cv-item">
-    <div class="cv-item-header">
-      <span class="cv-item-title">${i.name}</span>
-      <span class="cv-item-date">${formatMonth(i.date)}</span>
-    </div>
-    ${i.issuer ? `<div class="cv-item-sub">${i.issuer}${i.validity ? ' · ' + i.validity : ''}</div>` : ''}
-  </div>`).join('');
+  const rows = items.map(i => {
+    const nameHTML = i.url
+      ? `<a href="${safeUrl(i.url)}" target="_blank" rel="noopener noreferrer" class="cv-cert-link">${i.name}</a>`
+      : i.name;
+    return `<div class="cv-item">
+      <div class="cv-item-header">
+        <span class="cv-item-title">${nameHTML}</span>
+        <span class="cv-item-date">${formatMonth(i.date)}</span>
+      </div>
+      ${i.issuer ? `<div class="cv-item-sub">${i.issuer}${i.validity ? ' · ' + i.validity : ''}</div>` : ''}
+    </div>`;
+  }).join('');
   return `<div class="cv-section"><div class="cv-section-title">${lang.certifications}</div>${rows}</div>`;
 }
 
@@ -1008,6 +1084,38 @@ function langLabel(lvl) {
 
 function nl2br(str) {
   return str.replace(/\n/g, '<br>');
+}
+
+// --- HTML güvenliği ---
+// Kullanıcı girdisini innerHTML'e gömerken HTML enjeksiyonunu (XSS) ve
+// '<', '&' gibi karakterlerin metni bozmasını engeller.
+function esc(s) {
+  if (s == null) return '';
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+// Bir veri objesindeki tüm string değerleri özyinelemeli olarak escape eder.
+// Render sınırında bir kez çağrılır; şablonlardaki ${...} ifadeleri güvenli kalır.
+function escapeDeep(v) {
+  if (typeof v === 'string') return esc(v);
+  if (Array.isArray(v)) return v.map(escapeDeep);
+  if (v && typeof v === 'object') {
+    const o = {};
+    for (const k in v) o[k] = escapeDeep(v[k]);
+    return o;
+  }
+  return v;
+}
+
+// href için yalnızca güvenli protokollere izin verir; javascript: vb. engellenir.
+function safeUrl(url) {
+  const u = String(url || '').trim();
+  return /^(https?:|mailto:|tel:)/i.test(u) ? u : '#';
 }
 
 function saveCV() {
@@ -1251,14 +1359,14 @@ function renderCVList() {
     return;
   }
   list.innerHTML = entries.reverse().map(cv => {
-    const name = cv.personal ? [cv.personal.firstName, cv.personal.lastName].filter(Boolean).join(' ') : '';
+    const name = cv.personal ? esc([cv.personal.firstName, cv.personal.lastName].filter(Boolean).join(' ')) : '';
     const themeColors = { classic:'#2563eb', modern:'#7c3aed', creative:'#db2777', minimal:'#374151', executive:'#b45309', europass:'#003399' };
     const color = themeColors[cv.theme] || '#2563eb';
     const langBadge = cv.cvLanguage === 'en'
       ? `<span class="cv-card-theme" style="background:#f0fdf4;color:#16a34a;margin-left:4px">🇬🇧 EN</span>`
       : `<span class="cv-card-theme" style="background:#eff6ff;color:#2563eb;margin-left:4px">🇹🇷 TR</span>`;
     return `<div class="cv-card">
-      <div class="cv-card-title">${cv.title || 'Başlıksız CV'}</div>
+      <div class="cv-card-title">${esc(cv.title) || 'Başlıksız CV'}</div>
       ${name ? `<div class="cv-card-meta"><i class="fas fa-user" style="color:${color}"></i> ${name}</div>` : ''}
       <div class="cv-card-meta"><i class="fas fa-clock"></i> ${cv.savedAt || ''}</div>
       <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
@@ -1277,11 +1385,24 @@ function renderCVList() {
 
 function exportPDF() {
   const data = collectData();
-  const name = [data.personal.firstName, data.personal.lastName].filter(Boolean).join('_') || 'CV';
   const element = document.getElementById('cvPreview');
+
+  // Dar ekranda önizleme paneli display:none olur; gizli/sıfır boyutlu
+  // elementten render boş PDF üretir. Önce uyar.
+  if (!element.offsetWidth || !element.offsetHeight) {
+    showToast('PDF için önizleme görünür olmalı. Lütfen pencereyi genişletin.', 'error');
+    return;
+  }
+
+  const rawName = [data.personal.firstName, data.personal.lastName].filter(Boolean).join('_');
+  const filename = (rawName ? rawName + '_CV' : 'CV') + '.pdf';
+
+  const seps = element.querySelectorAll('.cv-page-sep');
+  seps.forEach(el => el.style.display = 'none');
+
   const opt = {
     margin: 0,
-    filename: name + '_CV.pdf',
+    filename: filename,
     image: { type: 'jpeg', quality: 0.98 },
     html2canvas: {
       scale: 2,
@@ -1290,12 +1411,17 @@ function exportPDF() {
       backgroundColor: '#ffffff'
     },
     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true },
+    // NOT: 'avoid-all' büyük kapsayıcıları (cv-body vb.) da sonraki sayfaya
+    // iterek ilk sayfayı boş bırakıyordu. Bu yüzden varsayılan css/legacy modu
+    // kullanılıyor. Öğe bölünmesi için ileride hedefli pagebreak.avoid denenebilir.
     pagebreak: { mode: ['css', 'legacy'] }
   };
   showToast('PDF hazırlanıyor...', '');
   html2pdf().set(opt).from(element).save().then(() => {
+    seps.forEach(el => el.style.display = '');
     showToast('PDF başarıyla indirildi!', 'success');
   }).catch(err => {
+    seps.forEach(el => el.style.display = '');
     console.error(err);
     showToast('PDF oluşturulamadı', 'error');
   });
