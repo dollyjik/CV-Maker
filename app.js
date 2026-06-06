@@ -4,6 +4,8 @@ let currentCVId = null;
 let photoDataUrl = null;
 let isDarkMode = false;
 let currentCVLanguage = 'tr';
+let autoSaveTimer = null;
+let isRestoring = false;
 
 const STORAGE_KEY = 'cvmaker_cvs';
 const DARK_MODE_KEY = 'cvmaker_dark_mode';
@@ -1453,6 +1455,21 @@ function showToast(msg, type) {
   t.textContent = msg;
   t.className = 'toast' + (type ? ' ' + type : '') + ' show';
   setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// Kayıt durumu göstergesini günceller. state: 'saving' | 'saved' | 'error' | 'neutral'
+function setSaveStatus(state) {
+  const el = document.getElementById('saveStatus');
+  if (!el) return;
+  const map = {
+    saving:  { text: 'Kaydediliyor…',   cls: 'saving' },
+    saved:   { text: 'Kaydedildi ✓',    cls: 'saved' },
+    error:   { text: 'Kaydedilemedi ⚠', cls: 'error' },
+    neutral: { text: '',                 cls: '' }
+  };
+  const s = map[state] || map.neutral;
+  el.textContent = s.text;
+  el.className = 'save-status' + (s.cls ? ' ' + s.cls : '');
 }
 
 function syncJobTitle(value) {
