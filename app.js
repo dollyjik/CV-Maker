@@ -499,9 +499,9 @@ function buildCVHTML(d) {
   if (p.email) contacts.push(`<span><i class="fas fa-envelope"></i>${p.email}</span>`);
   if (p.phone) contacts.push(`<span><i class="fas fa-phone"></i>${p.phone}</span>`);
   if (p.city || p.country) contacts.push(`<span><i class="fas fa-map-marker-alt"></i>${[p.city,p.country].filter(Boolean).join(', ')}</span>`);
-  if (p.linkedin) contacts.push(`<span><i class="fab fa-linkedin"></i>${p.linkedin}</span>`);
-  if (p.website) contacts.push(`<span><i class="fas fa-globe"></i>${p.website}</span>`);
-  if (p.github) contacts.push(`<span><i class="fab fa-github"></i>${p.github}</span>`);
+  if (p.linkedin) contacts.push(`<span><i class="fab fa-linkedin"></i>${prettyUrl(p.linkedin)}</span>`);
+  if (p.website) contacts.push(`<span><i class="fas fa-globe"></i>${prettyUrl(p.website)}</span>`);
+  if (p.github) contacts.push(`<span><i class="fab fa-github"></i>${prettyUrl(p.github)}</span>`);
 
   const sideInfo = [];
   if (p.email) sideInfo.push({ icon:'fa-envelope', text: p.email });
@@ -511,9 +511,9 @@ function buildCVHTML(d) {
   if (p.nationality) sideInfo.push({ icon:'fa-flag', text: p.nationality });
   if (p.maritalStatus) sideInfo.push({ icon:'fa-heart', text: p.maritalStatus });
   if (p.drivingLicense) sideInfo.push({ icon:'fa-car', text: lang.license + ': ' + p.drivingLicense });
-  if (p.linkedin) sideInfo.push({ icon:'fa-linkedin fab', text: p.linkedin });
-  if (p.website) sideInfo.push({ icon:'fa-globe', text: p.website });
-  if (p.github) sideInfo.push({ icon:'fa-github fab', text: p.github });
+  if (p.linkedin) sideInfo.push({ icon:'fa-linkedin fab', text: prettyUrl(p.linkedin) });
+  if (p.website) sideInfo.push({ icon:'fa-globe', text: prettyUrl(p.website) });
+  if (p.github) sideInfo.push({ icon:'fa-github fab', text: prettyUrl(p.github) });
 
   const sideInfoHTML = sideInfo.map(i => `<div class="cv-info-item"><i class="fas ${i.icon}"></i><span>${i.text}</span></div>`).join('');
 
@@ -605,9 +605,9 @@ function buildEuropassCV(d, fullName, photoHTML) {
   if (p.city || p.country) contactItems.push({ icon:'fa-map-marker-alt', text:[p.city,p.country].filter(Boolean).join(', ') });
   if (p.phone) contactItems.push({ icon:'fa-phone', text:p.phone });
   if (p.email) contactItems.push({ icon:'fa-envelope', text:p.email });
-  if (p.linkedin) contactItems.push({ icon:'fa-linkedin fab', text:p.linkedin });
-  if (p.website) contactItems.push({ icon:'fa-globe', text:p.website });
-  if (p.github) contactItems.push({ icon:'fa-github fab', text:p.github });
+  if (p.linkedin) contactItems.push({ icon:'fa-linkedin fab', text:prettyUrl(p.linkedin) });
+  if (p.website) contactItems.push({ icon:'fa-globe', text:prettyUrl(p.website) });
+  if (p.github) contactItems.push({ icon:'fa-github fab', text:prettyUrl(p.github) });
 
   const detailItems = [];
   if (p.birthDate) detailItems.push({ icon:'fa-calendar', label:'Doğum Tarihi', text:formatDate(p.birthDate) });
@@ -1092,6 +1092,12 @@ function langLabel(lvl) {
 
 function nl2br(str) {
   return str.replace(/\n/g, '<br>');
+}
+
+// URL'yi gösterim için sadeleştirir: protokol, www. ve sondaki / kaldırılır.
+// Örn: https://www.linkedin.com/in/ardayavuz/ → linkedin.com/in/ardayavuz
+function prettyUrl(u) {
+  return String(u || '').replace(/^https?:\/\//i, '').replace(/^www\./i, '').replace(/\/+$/, '');
 }
 
 // --- HTML güvenliği ---
