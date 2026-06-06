@@ -125,12 +125,14 @@ function applyDarkMode() {
 }
 
 function showPage(name) {
+  if (name !== 'editor') flushAutoSave();
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('page-' + name).classList.add('active');
   if (name === 'my-cvs') renderCVList();
 }
 
 function startNewCV() {
+  flushAutoSave();
   isRestoring = true;
   currentCVId = null;
   currentTheme = 'classic';
@@ -1172,6 +1174,7 @@ function loadCV(id) {
   const cvs = loadAllCVs();
   const data = cvs[id];
   if (!data) return;
+  flushAutoSave();
   isRestoring = true;
   currentCVId = id;
   currentTheme = data.theme || 'classic';
@@ -1500,6 +1503,15 @@ function autoSave() {
   setSaveStatus(res === 'failed' ? 'error' : 'saved');
 }
 
+// Bekleyen debounce'lu kaydı hemen yazar (navigasyon/sayfa kapanışı öncesi).
+function flushAutoSave() {
+  if (autoSaveTimer) {
+    clearTimeout(autoSaveTimer);
+    autoSaveTimer = null;
+    autoSave();
+  }
+}
+
 function syncJobTitle(value) {
   const el = document.getElementById('jobTitle');
   if (el) el.value = value;
@@ -1521,4 +1533,5 @@ document.addEventListener('DOMContentLoaded', () => {
   if (sum) sum.addEventListener('input', () => {
     document.getElementById('summaryCount').textContent = sum.value.length;
   });
+  window.addEventListener('beforeunload', flushAutoSave);
 });
