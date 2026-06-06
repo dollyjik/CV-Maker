@@ -131,6 +131,7 @@ function showPage(name) {
 }
 
 function startNewCV() {
+  isRestoring = true;
   currentCVId = null;
   currentTheme = 'classic';
   photoDataUrl = null;
@@ -139,6 +140,8 @@ function startNewCV() {
   applyCVLanguage('tr');
   showPage('editor');
   updatePreview();
+  isRestoring = false;
+  setSaveStatus('neutral');
 }
 
 function selectTheme(theme) {
@@ -1169,6 +1172,7 @@ function loadCV(id) {
   const cvs = loadAllCVs();
   const data = cvs[id];
   if (!data) return;
+  isRestoring = true;
   currentCVId = id;
   currentTheme = data.theme || 'classic';
   photoDataUrl = data.photo || null;
@@ -1212,6 +1216,8 @@ function loadCV(id) {
 
   showPage('editor');
   updatePreview();
+  isRestoring = false;
+  setSaveStatus('saved');
   showToast('CV yüklendi!', 'success');
 }
 
