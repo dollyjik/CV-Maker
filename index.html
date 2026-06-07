@@ -129,6 +129,15 @@
               <button class="lang-btn" id="langBtn-en" onclick="selectCVLanguage('en')">🇬🇧 EN</button>
             </div>
           </div>
+          <div class="spacing-selector">
+            <span>Boşluk:</span>
+            <div class="spacing-presets">
+              <button class="spacing-btn" id="spacingBtn-compact" onclick="setSpacing(0.9)">Sıkışık</button>
+              <button class="spacing-btn active" id="spacingBtn-normal" onclick="setSpacing(1)">Normal</button>
+              <button class="spacing-btn" id="spacingBtn-relaxed" onclick="setSpacing(1.15)">Ferah</button>
+            </div>
+            <input type="range" id="spacingSlider" class="spacing-slider" min="0.85" max="1.25" step="0.01" value="1" oninput="setSpacing(parseFloat(this.value))" title="Boşluk yoğunluğu" />
+          </div>
         </div>
       </div>
 

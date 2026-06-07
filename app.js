@@ -6,6 +6,7 @@ let isDarkMode = false;
 let currentCVLanguage = 'tr';
 let autoSaveTimer = null;
 let isRestoring = false;
+let currentSpacing = 1;
 
 const STORAGE_KEY = 'cvmaker_cvs';
 const DARK_MODE_KEY = 'cvmaker_dark_mode';
@@ -140,6 +141,7 @@ function startNewCV() {
   resetForm();
   selectTheme('classic');
   applyCVLanguage('tr');
+  applySpacing(1);
   showPage('editor');
   updatePreview();
   isRestoring = false;
@@ -169,6 +171,29 @@ function applyCVLanguage(l) {
   document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
   const btn = document.getElementById('langBtn-' + l);
   if (btn) btn.classList.add('active');
+}
+
+const SPACING_PRESETS = { 'spacingBtn-compact': 0.9, 'spacingBtn-normal': 1, 'spacingBtn-relaxed': 1.15 };
+
+// Kullanıcı boşluk yoğunluğunu değiştirdiğinde (slider/buton): uygular + otomatik kayıt.
+function setSpacing(v) {
+  v = Math.min(1.25, Math.max(0.85, Number(v) || 1));
+  currentSpacing = v;
+  applySpacing(v);
+  updatePreview();
+}
+
+// CSS değişkenini ve kontrol durumunu (slider + aktif buton) ayarlar. updatePreview ÇAĞIRMAZ.
+function applySpacing(v) {
+  currentSpacing = v;
+  const preview = document.getElementById('cvPreview');
+  if (preview) preview.style.setProperty('--cv-spacing', v);
+  const slider = document.getElementById('spacingSlider');
+  if (slider && parseFloat(slider.value) !== v) slider.value = v;
+  Object.entries(SPACING_PRESETS).forEach(([id, val]) => {
+    const b = document.getElementById(id);
+    if (b) b.classList.toggle('active', Math.abs(val - v) < 0.001);
+  });
 }
 
 function showSection(name, btn) {
@@ -375,6 +400,7 @@ function collectData() {
   const data = {
     theme: currentTheme,
     cvLanguage: currentCVLanguage,
+    spacing: currentSpacing,
     title: val('cvTitle'),
     photo: photoDataUrl,
     showPhoto: document.getElementById('showPhoto')?.checked ?? true,
@@ -1199,6 +1225,7 @@ function loadCV(id) {
   applyTheme(currentTheme);
   selectTheme(currentTheme);
   applyCVLanguage(data.cvLanguage || 'tr');
+  applySpacing(data.spacing || 1);
 
   const p = data.personal || {};
   setVal('cvTitle', data.title);
