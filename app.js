@@ -177,7 +177,7 @@ const SPACING_PRESETS = { 'spacingBtn-compact': 0.9, 'spacingBtn-normal': 1, 'sp
 
 // Kullanıcı boşluk yoğunluğunu değiştirdiğinde (slider/buton): uygular + otomatik kayıt.
 function setSpacing(v) {
-  v = Math.min(1.25, Math.max(0.85, Number(v) || 1));
+  v = Math.min(2, Math.max(0.5, Number(v) || 1));
   currentSpacing = v;
   applySpacing(v);
   updatePreview();
