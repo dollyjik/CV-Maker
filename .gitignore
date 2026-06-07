@@ -1,0 +1,5 @@
+# Yerel araç/önizleme yapılandırması
+.claude/
+
+# Superpowers spec & plan dokümanları (yalnızca yerel)
+docs/superpowers/
