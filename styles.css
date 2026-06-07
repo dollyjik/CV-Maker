@@ -180,9 +180,9 @@ body.theme-europass { --primary: #003399; --primary-dark: #002277; --accent: #e8
 .cv-page-sep::before { content: ''; position: absolute; left: 0; right: 0; top: -10px; height: 8px; background: linear-gradient(to bottom, rgba(0,0,0,.07), transparent); }
 .cv-page-sep::after { content: attr(data-label); position: absolute; right: 14px; top: -22px; font-size: 10px; font-weight: 700; letter-spacing: .8px; color: #64748b; background: #fff; border: 1px dashed #cbd5e1; padding: 2px 10px; border-radius: 20px; font-family: 'Segoe UI', sans-serif; white-space: nowrap; }
 
-body.theme-classic .cv-preview { font-family: 'Segoe UI', Arial, sans-serif; background: linear-gradient(to right, #f0f4f8 240px, #fff 240px); }
+body.theme-classic .cv-preview { font-family: 'Segoe UI', Arial, sans-serif; background: linear-gradient(to right, #f0f4f8 calc(240px * var(--cv-sidebar, 1)), #fff calc(240px * var(--cv-sidebar, 1))); }
 body.theme-classic .cv-preview .cv-header { background: var(--sidebar-bg); color: #fff; padding: 36px 40px; display: flex; align-items: center; gap: 28px; }
-body.theme-classic .cv-preview .cv-body { display: grid; grid-template-columns: 240px 1fr; }
+body.theme-classic .cv-preview .cv-body { display: grid; grid-template-columns: calc(240px * var(--cv-sidebar, 1)) 1fr; }
 body.theme-classic .cv-preview .cv-sidebar { background: transparent; padding: 28px 22px; }
 body.theme-classic .cv-preview .cv-main { padding: 28px 32px; }
 
@@ -193,9 +193,9 @@ body.theme-modern .cv-preview .cv-sidebar { background: #f5f3ff; padding: 24px 4
 body.theme-modern .cv-preview .cv-main { padding: 24px 40px; }
 body.theme-modern .cv-preview .cv-section-title { color: var(--primary); border-bottom: 2px solid var(--primary); padding-bottom: 6px; margin-bottom: 16px; font-size: 15px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
 
-body.theme-creative .cv-preview { background: linear-gradient(to right, var(--accent,#fce7f3) 220px, #fff 220px); }
+body.theme-creative .cv-preview { background: linear-gradient(to right, var(--accent,#fce7f3) calc(220px * var(--cv-sidebar, 1)), #fff calc(220px * var(--cv-sidebar, 1))); }
 body.theme-creative .cv-preview .cv-header { background: var(--header-bg); color: #fff; padding: 40px; clip-path: polygon(0 0, 100% 0, 100% 80%, 0 100%); margin-bottom: -30px; }
-body.theme-creative .cv-preview .cv-body { display: grid; grid-template-columns: 220px 1fr; padding-top: 30px; }
+body.theme-creative .cv-preview .cv-body { display: grid; grid-template-columns: calc(220px * var(--cv-sidebar, 1)) 1fr; padding-top: 30px; }
 body.theme-creative .cv-preview .cv-sidebar { background: transparent; padding: 20px; }
 body.theme-creative .cv-preview .cv-main { padding: 20px 28px; }
 body.theme-creative .cv-preview .cv-section-title { color: var(--primary); font-size: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 12px; }
@@ -206,9 +206,9 @@ body.theme-minimal .cv-preview .cv-main { padding: 0; }
 body.theme-minimal .cv-preview .cv-sidebar { display: none; }
 body.theme-minimal .cv-preview .cv-section-title { color: var(--primary); font-size: 13px; text-transform: uppercase; letter-spacing: 2px; font-weight: 700; border-left: 3px solid var(--primary); padding-left: 10px; margin: 24px 0 12px; }
 
-body.theme-executive .cv-preview { background: linear-gradient(to right, #fef3c7 230px, #fff 230px); }
+body.theme-executive .cv-preview { background: linear-gradient(to right, #fef3c7 calc(230px * var(--cv-sidebar, 1)), #fff calc(230px * var(--cv-sidebar, 1))); }
 body.theme-executive .cv-preview .cv-header { background: var(--header-bg); color: #fff; padding: 36px 40px; border-bottom: 6px solid #f59e0b; }
-body.theme-executive .cv-preview .cv-body { display: grid; grid-template-columns: 230px 1fr; }
+body.theme-executive .cv-preview .cv-body { display: grid; grid-template-columns: calc(230px * var(--cv-sidebar, 1)) 1fr; }
 body.theme-executive .cv-preview .cv-sidebar { background: transparent; padding: 28px 20px; }
 body.theme-executive .cv-preview .cv-main { padding: 28px 32px; }
 

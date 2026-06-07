@@ -7,6 +7,7 @@ let currentCVLanguage = 'tr';
 let autoSaveTimer = null;
 let isRestoring = false;
 let currentSpacing = 1;
+let currentSidebar = 1;
 
 const STORAGE_KEY = 'cvmaker_cvs';
 const DARK_MODE_KEY = 'cvmaker_dark_mode';
@@ -142,6 +143,7 @@ function startNewCV() {
   selectTheme('classic');
   applyCVLanguage('tr');
   applySpacing(1);
+  applySidebar(1);
   showPage('editor');
   updatePreview();
   isRestoring = false;
@@ -177,7 +179,7 @@ const SPACING_PRESETS = { 'spacingBtn-compact': 0.9, 'spacingBtn-normal': 1, 'sp
 
 // Kullanıcı boşluk yoğunluğunu değiştirdiğinde (slider/buton): uygular + otomatik kayıt.
 function setSpacing(v) {
-  v = Math.min(2, Math.max(0.5, Number(v) || 1));
+  v = Math.min(2, Math.max(0.3, Number(v) || 1));
   currentSpacing = v;
   applySpacing(v);
   updatePreview();
@@ -194,6 +196,22 @@ function applySpacing(v) {
     const b = document.getElementById(id);
     if (b) b.classList.toggle('active', Math.abs(val - v) < 0.001);
   });
+}
+
+// Sol gri sidebar genişliği çarpanı (classic/creative/executive temalarında etkili).
+function setSidebar(v) {
+  v = Math.min(2, Math.max(0.3, Number(v) || 1));
+  currentSidebar = v;
+  applySidebar(v);
+  updatePreview();
+}
+
+function applySidebar(v) {
+  currentSidebar = v;
+  const preview = document.getElementById('cvPreview');
+  if (preview) preview.style.setProperty('--cv-sidebar', v);
+  const slider = document.getElementById('sidebarSlider');
+  if (slider && parseFloat(slider.value) !== v) slider.value = v;
 }
 
 function showSection(name, btn) {
@@ -401,6 +419,7 @@ function collectData() {
     theme: currentTheme,
     cvLanguage: currentCVLanguage,
     spacing: currentSpacing,
+    sidebar: currentSidebar,
     title: val('cvTitle'),
     photo: photoDataUrl,
     showPhoto: document.getElementById('showPhoto')?.checked ?? true,
@@ -1226,6 +1245,7 @@ function loadCV(id) {
   selectTheme(currentTheme);
   applyCVLanguage(data.cvLanguage || 'tr');
   applySpacing(data.spacing || 1);
+  applySidebar(data.sidebar || 1);
 
   const p = data.personal || {};
   setVal('cvTitle', data.title);
