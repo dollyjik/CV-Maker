@@ -139,7 +139,11 @@
             <input type="range" id="spacingSlider" class="spacing-slider" min="0.3" max="2" step="0.01" value="1" oninput="setSpacing(parseFloat(this.value))" title="Boşluk yoğunluğu" />
           </div>
           <div class="spacing-selector">
-            <span>Gri alan:</span>
+            <span>Gri boşluk:</span>
+            <input type="range" id="sidebarSpacingSlider" class="spacing-slider" min="0.3" max="2" step="0.01" value="1" oninput="setSidebarSpacing(parseFloat(this.value))" title="Gri panel içi satır aralığı" />
+          </div>
+          <div class="spacing-selector">
+            <span>Gri genişlik:</span>
             <input type="range" id="sidebarSlider" class="spacing-slider" min="0.3" max="2" step="0.01" value="1" oninput="setSidebar(parseFloat(this.value))" title="Sol gri panel genişliği" />
           </div>
         </div>

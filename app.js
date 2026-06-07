@@ -8,6 +8,7 @@ let autoSaveTimer = null;
 let isRestoring = false;
 let currentSpacing = 1;
 let currentSidebar = 1;
+let currentSidebarSpacing = 1;
 
 const STORAGE_KEY = 'cvmaker_cvs';
 const DARK_MODE_KEY = 'cvmaker_dark_mode';
@@ -144,6 +145,7 @@ function startNewCV() {
   applyCVLanguage('tr');
   applySpacing(1);
   applySidebar(1);
+  applySidebarSpacing(1);
   showPage('editor');
   updatePreview();
   isRestoring = false;
@@ -211,6 +213,22 @@ function applySidebar(v) {
   const preview = document.getElementById('cvPreview');
   if (preview) preview.style.setProperty('--cv-sidebar', v);
   const slider = document.getElementById('sidebarSlider');
+  if (slider && parseFloat(slider.value) !== v) slider.value = v;
+}
+
+// Gri sol panel (sidebar) içindeki boşlukları ana içerikten bağımsız ölçekler.
+function setSidebarSpacing(v) {
+  v = Math.min(2, Math.max(0.3, Number(v) || 1));
+  currentSidebarSpacing = v;
+  applySidebarSpacing(v);
+  updatePreview();
+}
+
+function applySidebarSpacing(v) {
+  currentSidebarSpacing = v;
+  const preview = document.getElementById('cvPreview');
+  if (preview) preview.style.setProperty('--cv-spacing-side', v);
+  const slider = document.getElementById('sidebarSpacingSlider');
   if (slider && parseFloat(slider.value) !== v) slider.value = v;
 }
 
@@ -420,6 +438,7 @@ function collectData() {
     cvLanguage: currentCVLanguage,
     spacing: currentSpacing,
     sidebar: currentSidebar,
+    sidebarSpacing: currentSidebarSpacing,
     title: val('cvTitle'),
     photo: photoDataUrl,
     showPhoto: document.getElementById('showPhoto')?.checked ?? true,
@@ -1246,6 +1265,7 @@ function loadCV(id) {
   applyCVLanguage(data.cvLanguage || 'tr');
   applySpacing(data.spacing || 1);
   applySidebar(data.sidebar || 1);
+  applySidebarSpacing(data.sidebarSpacing || 1);
 
   const p = data.personal || {};
   setVal('cvTitle', data.title);
