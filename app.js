@@ -499,9 +499,9 @@ function buildCVHTML(d) {
   if (p.email) contacts.push(`<span><i class="fas fa-envelope"></i>${p.email}</span>`);
   if (p.phone) contacts.push(`<span><i class="fas fa-phone"></i>${p.phone}</span>`);
   if (p.city || p.country) contacts.push(`<span><i class="fas fa-map-marker-alt"></i>${[p.city,p.country].filter(Boolean).join(', ')}</span>`);
-  if (p.linkedin) contacts.push(`<span><i class="fab fa-linkedin"></i>${prettyUrl(p.linkedin)}</span>`);
-  if (p.website) contacts.push(`<span><i class="fas fa-globe"></i>${prettyUrl(p.website)}</span>`);
-  if (p.github) contacts.push(`<span><i class="fab fa-github"></i>${prettyUrl(p.github)}</span>`);
+  if (p.linkedin) contacts.push(`<span><i class="fab fa-linkedin"></i><a class="cv-contact-link" href="${linkUrl(p.linkedin)}">${prettyUrl(p.linkedin)}</a></span>`);
+  if (p.website) contacts.push(`<span><i class="fas fa-globe"></i><a class="cv-contact-link" href="${linkUrl(p.website)}">${prettyUrl(p.website)}</a></span>`);
+  if (p.github) contacts.push(`<span><i class="fab fa-github"></i><a class="cv-contact-link" href="${linkUrl(p.github)}">${prettyUrl(p.github)}</a></span>`);
 
   const sideInfo = [];
   if (p.email) sideInfo.push({ icon:'fa-envelope', text: p.email });
@@ -511,11 +511,11 @@ function buildCVHTML(d) {
   if (p.nationality) sideInfo.push({ icon:'fa-flag', text: p.nationality });
   if (p.maritalStatus) sideInfo.push({ icon:'fa-heart', text: p.maritalStatus });
   if (p.drivingLicense) sideInfo.push({ icon:'fa-car', text: lang.license + ': ' + p.drivingLicense });
-  if (p.linkedin) sideInfo.push({ icon:'fa-linkedin fab', text: prettyUrl(p.linkedin) });
-  if (p.website) sideInfo.push({ icon:'fa-globe', text: prettyUrl(p.website) });
-  if (p.github) sideInfo.push({ icon:'fa-github fab', text: prettyUrl(p.github) });
+  if (p.linkedin) sideInfo.push({ icon:'fa-linkedin fab', text: prettyUrl(p.linkedin), href: linkUrl(p.linkedin) });
+  if (p.website) sideInfo.push({ icon:'fa-globe', text: prettyUrl(p.website), href: linkUrl(p.website) });
+  if (p.github) sideInfo.push({ icon:'fa-github fab', text: prettyUrl(p.github), href: linkUrl(p.github) });
 
-  const sideInfoHTML = sideInfo.map(i => `<div class="cv-info-item"><i class="fas ${i.icon}"></i><span>${i.text}</span></div>`).join('');
+  const sideInfoHTML = sideInfo.map(i => `<div class="cv-info-item"><i class="fas ${i.icon}"></i><span>${i.href ? `<a class="cv-contact-link" href="${i.href}">${i.text}</a>` : i.text}</span></div>`).join('');
 
   const theme = d.theme || 'classic';
   if (theme === 'minimal') return buildMinimalCV(d, fullName, photoHTML, contacts, sideInfo);
@@ -605,9 +605,9 @@ function buildEuropassCV(d, fullName, photoHTML) {
   if (p.city || p.country) contactItems.push({ icon:'fa-map-marker-alt', text:[p.city,p.country].filter(Boolean).join(', ') });
   if (p.phone) contactItems.push({ icon:'fa-phone', text:p.phone });
   if (p.email) contactItems.push({ icon:'fa-envelope', text:p.email });
-  if (p.linkedin) contactItems.push({ icon:'fa-linkedin fab', text:prettyUrl(p.linkedin) });
-  if (p.website) contactItems.push({ icon:'fa-globe', text:prettyUrl(p.website) });
-  if (p.github) contactItems.push({ icon:'fa-github fab', text:prettyUrl(p.github) });
+  if (p.linkedin) contactItems.push({ icon:'fa-linkedin fab', text:prettyUrl(p.linkedin), href: linkUrl(p.linkedin) });
+  if (p.website) contactItems.push({ icon:'fa-globe', text:prettyUrl(p.website), href: linkUrl(p.website) });
+  if (p.github) contactItems.push({ icon:'fa-github fab', text:prettyUrl(p.github), href: linkUrl(p.github) });
 
   const detailItems = [];
   if (p.birthDate) detailItems.push({ icon:'fa-calendar', label:'Doğum Tarihi', text:formatDate(p.birthDate) });
@@ -616,7 +616,7 @@ function buildEuropassCV(d, fullName, photoHTML) {
   if (p.maritalStatus) detailItems.push({ icon:'fa-heart', label:'Medeni Durum', text:p.maritalStatus });
   if (p.drivingLicense) detailItems.push({ icon:'fa-car', label:lang.license, text:p.drivingLicense });
 
-  const contactHTML = contactItems.map(c => `<span class="ep-contact-item"><i class="fas ${c.icon}"></i>${c.text}</span>`).join('');
+  const contactHTML = contactItems.map(c => `<span class="ep-contact-item"><i class="fas ${c.icon}"></i>${c.href ? `<a class="cv-contact-link" href="${c.href}">${c.text}</a>` : c.text}</span>`).join('');
   const detailsHTML = detailItems.map(di => `<div class="ep-detail-item"><i class="fas ${di.icon}"></i><span class="ep-detail-label">${di.label}:</span> ${di.text}</div>`).join('');
 
   const allSkills = [...(d.skills.technical||[]),...(d.skills.software||[]),...(d.skills.soft||[])];
@@ -1100,6 +1100,15 @@ function prettyUrl(u) {
   return String(u || '').replace(/^https?:\/\//i, '').replace(/^www\./i, '').replace(/\/+$/, '');
 }
 
+// Gösterim sadeleştirilse de href için protokollü tam adres üretir.
+// Örn: linkedin.com/in/x → https://linkedin.com/in/x
+function linkUrl(u) {
+  const s = String(u || '').trim();
+  if (!s) return '';
+  if (/^(https?:\/\/|mailto:|tel:)/i.test(s)) return s;
+  return 'https://' + s.replace(/^\/+/, '');
+}
+
 // --- HTML güvenliği ---
 // Kullanıcı girdisini innerHTML'e gömerken HTML enjeksiyonunu (XSS) ve
 // '<', '&' gibi karakterlerin metni bozmasını engeller.
@@ -1434,13 +1443,38 @@ function exportPDF() {
     pagebreak: { mode: ['css', 'legacy'] }
   };
   showToast('PDF hazırlanıyor...', '');
-  html2pdf().set(opt).from(element).save().then(() => {
+  // toPdf ile pdf'i al, <a> bağlantılarına tıklanabilir bölgeler ekle, sonra kaydet.
+  html2pdf().set(opt).from(element).toPdf().get('pdf').then(pdf => {
+    addPdfLinks(pdf, element);
+    pdf.save(filename);
     seps.forEach(el => el.style.display = '');
     showToast('PDF başarıyla indirildi!', 'success');
   }).catch(err => {
     seps.forEach(el => el.style.display = '');
     console.error(err);
     showToast('PDF oluşturulamadı', 'error');
+  });
+}
+
+// html2canvas içeriği görüntüye çevirdiği için <a> linkleri PDF'te kaybolur.
+// Önizlemedeki her bağlantının konumunu A4 mm koordinatına çevirip jsPDF'in
+// link() API'siyle o bölgeye görünmez tıklanabilir alan ekleriz.
+function addPdfLinks(pdf, element) {
+  const base = element.getBoundingClientRect();
+  const pxToMm = 210 / element.offsetWidth;   // 794px içerik genişliği → 210mm (A4)
+  const pageHmm = 297;
+  element.querySelectorAll('a[href]').forEach(a => {
+    const href = a.getAttribute('href');
+    if (!href || !/^(https?:|mailto:|tel:)/i.test(href)) return;
+    const r = a.getBoundingClientRect();
+    if (!r.width || !r.height) return;
+    const xmm = (r.left - base.left) * pxToMm;
+    const yAbs = (r.top - base.top) * pxToMm;
+    const wmm = r.width * pxToMm;
+    const hmm = r.height * pxToMm;
+    const page = Math.floor(yAbs / pageHmm) + 1;
+    const ymm = yAbs - (page - 1) * pageHmm;
+    try { pdf.setPage(page); pdf.link(xmm, ymm, wmm, hmm, { url: href }); } catch (e) { /* sayfa dışı */ }
   });
 }
 

@@ -247,6 +247,8 @@ body.theme-executive .cv-preview .cv-main { padding: 28px 32px; }
 .cv-request-text { font-style: italic; color: #64748b; font-size: 13px; }
 .cv-cert-link { color: inherit; text-decoration: underline; text-decoration-color: var(--primary,#2563eb); text-underline-offset: 2px; opacity: .85; }
 .cv-cert-link:hover { opacity: 1; }
+.cv-contact-link { color: inherit; text-decoration: none; }
+.cv-contact-link:hover { text-decoration: underline; }
 
 body.theme-minimal .cv-preview .cv-body { display: block; }
 
